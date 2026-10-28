@@ -1,0 +1,398 @@
+.checklist-page {
+  max-width: 1040px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+  box-sizing: border-box;
+  color: var(--text-main);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.voltar-veiculos {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--slate-600);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+  margin-bottom: 20px;
+}
+
+.voltar-veiculos mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.voltar-veiculos:hover {
+  color: var(--primary-600);
+  transform: translateX(-2px);
+}
+
+.checklist-header {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--primary-600);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
+}
+
+.identificacao-frota {
+  color: var(--primary-600);
+  font-size: 0.7em;
+  font-weight: 600;
+}
+
+.checklist-header p {
+  margin: 6px 0 0;
+  color: var(--slate-500);
+  font-size: 14px;
+}
+
+/* Seleção de Veículos */
+.selecao-veiculos {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.cabecalho-selecao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.cabecalho-selecao h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--slate-900);
+}
+
+.cabecalho-selecao span {
+  color: var(--slate-500);
+  font-size: 13px;
+  background: var(--slate-100);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.cards-veiculos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card-veiculo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-veiculo:hover {
+  border-color: var(--primary-300);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  background: var(--primary-50);
+}
+
+.icone-veiculo {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+  flex-shrink: 0;
+}
+
+.dados-veiculo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dados-veiculo strong {
+  font-size: 15px;
+  color: var(--slate-900);
+  font-weight: 700;
+}
+
+.dados-veiculo span {
+  font-size: 12px;
+  color: var(--slate-500);
+}
+
+.dados-veiculo small {
+  font-size: 12px;
+  color: var(--primary-600);
+  font-weight: 600;
+}
+
+.seta-card {
+  color: var(--slate-300);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.card-veiculo:hover .seta-card {
+  color: var(--primary-600);
+  transform: translateX(3px);
+}
+
+/* Formulário de Inspeção */
+.checklist-formulario,
+.historico-checklist {
+  margin-top: 24px;
+  padding: 28px;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.checklist-formulario h2,
+.historico-checklist h2 {
+  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--slate-900);
+}
+
+.checklist-formulario form {
+  display: grid;
+  gap: 24px;
+}
+
+.campo-km,
+.campo-observacoes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate-700);
+}
+
+.campo-km {
+  max-width: 340px;
+}
+
+input:not([type="checkbox"]),
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--slate-300);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--slate-900);
+  font: inherit;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+input:not([type="checkbox"]):focus,
+textarea:focus {
+  border-color: var(--primary-500);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+/* Grid de Itens */
+.itens-checklist {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.item-checklist {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--slate-50);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.item-checklist:hover {
+  background: #ffffff;
+  border-color: var(--primary-300);
+}
+
+.item-checklist input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--primary-600);
+  cursor: pointer;
+}
+
+.item-checklist span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate-800);
+}
+
+.item-checklist strong {
+  color: var(--success-600);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--success-50);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.item-checklist input:not(:checked) + span + strong {
+  color: var(--warning-700);
+  background: var(--warning-50);
+}
+
+.botao-salvar-checklist {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.botao-salvar-checklist:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
+  transform: translateY(-1px);
+}
+
+.botao-manutencao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: var(--danger-50);
+  color: var(--danger-700);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.botao-manutencao:hover {
+  background: #fee2e2;
+}
+
+/* Histórico */
+.cabecalho-historico {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.historico-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.historico-resumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.historico-itens {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.historico-detalhe-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--slate-50);
+  font-size: 13px;
+}
+
+.historico-detalhe-item strong {
+  color: var(--success-600);
+}
+
+.historico-detalhe-item .item-pendente {
+  color: var(--danger-600);
+}
+
+.historico-observacoes {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-left: 4px solid var(--warning-500);
+  border-radius: 8px;
+  background: var(--warning-50);
+  color: var(--slate-700);
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .cards-veiculos {
+    grid-template-columns: 1fr;
+  }
+  .itens-checklist {
+    grid-template-columns: 1fr;
+  }
+  .historico-itens {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,27 @@
+@if (!isLoginPage()) {
+  <app-menu-lateral (click)="atualizarDadosAoClicar($event)" />
+}
+<main class="app-conteudo" [class.com-menu-inferior]="isPerfilOperacional">
+  <router-outlet />
+</main>
+
+@if (pwaService.showBanner()) {
+  <aside class="pwa-install-banner" [class.com-menu-inferior]="isPerfilOperacional" role="alert" aria-live="polite">
+    <div class="pwa-banner-icon">
+      <img src="icons/icon-72x72.png" alt="Frota ASG" width="36" height="36" />
+    </div>
+    <div class="pwa-banner-content">
+      <strong>Instalar Frota ASG</strong>
+      <span>Instale como app para acesso rápido e criar atalho no dispositivo.</span>
+    </div>
+    <div class="pwa-banner-actions">
+      <button type="button" class="btn-pwa-install" (click)="pwaService.promptInstall()">
+        <mat-icon>download</mat-icon>
+        <span>Instalar</span>
+      </button>
+      <button type="button" class="btn-pwa-dismiss" (click)="pwaService.dispensarBanner()" aria-label="Dispensar aviso de instalação">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </aside>
+}

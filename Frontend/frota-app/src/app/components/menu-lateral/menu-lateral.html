@@ -1,0 +1,119 @@
+<header class="topbar" [class.topbar-operacional]="isPerfilOperacional">
+  <div class="topbar-container">
+    <a class="brand"
+      [routerLink]="authService.isAdmin ? '/dashboard' : isAssistenteFrota ? '/assistente-frota' : isMotorista ? '/minhas-rotas' : '/login'"
+      (click)="fecharMenu()" aria-label="Ir para a página inicial">
+      <span class="brand-mark"><mat-icon>local_shipping</mat-icon></span>
+      <span class="brand-text">
+        <strong>Frota ASG</strong>
+        <small>Gestão Operacional</small>
+      </span>
+    </a>
+
+    <!-- Navegação de cabeçalho para Administradores -->
+    <ng-container *ngIf="!isPerfilOperacional && authService.isAuthenticated">
+      <button mat-icon-button class="menu-toggle" type="button" (click)="menuAberto = !menuAberto"
+        [attr.aria-expanded]="menuAberto" aria-controls="menu-principal" aria-label="Alternar menu" title="Menu">
+        <mat-icon>{{ menuAberto ? 'close' : 'menu' }}</mat-icon>
+      </button>
+
+      <nav id="menu-principal" class="menu-links" [class.aberto]="menuAberto" aria-label="Navegação principal">
+        <a routerLink="/dashboard" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>space_dashboard</mat-icon><span>Visão geral</span></a>
+        <a routerLink="/veiculos" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>directions_car</mat-icon><span>Veículos</span></a>
+        <a routerLink="/motoristas" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>badge</mat-icon><span>Motoristas</span></a>
+        <a routerLink="/rotas-diarias" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>route</mat-icon><span>Rotas diárias</span></a>
+        <a routerLink="/registros-paradas" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>assignment</mat-icon><span>Registros</span></a>
+        <a routerLink="/enderecos" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>location_on</mat-icon><span>Endereços</span></a>
+        <a routerLink="/checklist" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>fact_check</mat-icon><span>Checklists</span></a>
+        <a routerLink="/assistente-frota" routerLinkActive="active"
+          (click)="fecharMenu()"><mat-icon>support_agent</mat-icon><span>Assistente</span></a>
+        
+    
+
+        <div class="menu-divisor-mobile"></div>
+
+        <div class="usuario-perfil mobile-only">
+          <div class="avatar-usuario">{{ inicialUsuario }}</div>
+          <div class="dados">
+            <span class="nome">{{ usuarioLogado }}</span>
+            <span class="cargo">{{ cargoUsuario }}</span>
+          </div>
+        </div>
+
+        <button type="button" class="sair" (click)="sair()"><mat-icon>logout</mat-icon><span>Sair</span></button>
+      </nav>
+    </ng-container>
+
+    <!-- Perfil e Logout no Topo (Desktop / Operacional) -->
+    <div class="topbar-usuario-bloco" *ngIf="authService.isAuthenticated">
+      <div class="usuario-perfil desktop-only">
+        <div class="avatar-usuario">{{ inicialUsuario }}</div>
+        <div class="dados">
+          <span class="nome">{{ usuarioLogado }}</span>
+          <span class="cargo">{{ cargoUsuario }}</span>
+        </div>
+      </div>
+
+      <ng-container *ngIf="isPerfilOperacional">
+        <button type="button" class="botao-sair-topo" (click)="sair()" aria-label="Sair" title="Sair do sistema">
+          <mat-icon>logout</mat-icon>
+          <span>Sair</span>
+        </button>
+      </ng-container>
+    </div>
+  </div>
+</header>
+
+<!-- Menu inferior fixo (Bottom Navigation Bar) para Motoristas e Assistentes de Frota -->
+<nav class="menu-inferior" aria-label="Navegação inferior operacional" *ngIf="isPerfilOperacional && authService.isAuthenticated">
+  <!-- Perfil Motorista -->
+  <ng-container *ngIf="isMotorista">
+    <a routerLink="/minhas-rotas" routerLinkActive="active" class="item-inferior" id="nav-motorista-rotas">
+      <mat-icon>route</mat-icon>
+      <span>Minhas rotas</span>
+    </a>
+    <a routerLink="/checklist" routerLinkActive="active" class="item-inferior" id="nav-motorista-checklist">
+      <mat-icon>fact_check</mat-icon>
+      <span>Checklist</span>
+    </a>
+    <a routerLink="/minha-conta" routerLinkActive="active" class="item-inferior" id="nav-motorista-conta">
+      <mat-icon>manage_accounts</mat-icon>
+      <span>Minha conta</span>
+    </a>
+    <button type="button" class="item-inferior botao-sair" (click)="sair()" id="nav-motorista-sair" aria-label="Sair">
+      <mat-icon>logout</mat-icon>
+      <span>Sair</span>
+    </button>
+  </ng-container>
+
+  <!-- Perfil Assistente de Frota -->
+  <ng-container *ngIf="isAssistenteFrota">
+    <a routerLink="/assistente-frota" routerLinkActive="active" class="item-inferior" id="nav-assistente-manutencao">
+      <mat-icon>build</mat-icon>
+      <span>Manutenção</span>
+    </a>
+    <a routerLink="/veiculos" routerLinkActive="active" class="item-inferior" id="nav-assistente-veiculos">
+      <mat-icon>directions_car</mat-icon>
+      <span>Veículos</span>
+    </a>
+    <a routerLink="/oficinas" routerLinkActive="active" class="item-inferior" id="nav-assistente-oficinas">
+      <mat-icon>store</mat-icon>
+      <span>Oficinas</span>
+    </a>
+    <a routerLink="/checklist" routerLinkActive="active" class="item-inferior" id="nav-assistente-checklists">
+      <mat-icon>fact_check</mat-icon>
+      <span>Checklists</span>
+    </a>
+    <a routerLink="/minha-conta" routerLinkActive="active" class="item-inferior" id="nav-assistente-conta">
+      <mat-icon>manage_accounts</mat-icon>
+      <span>Minha conta</span>
+    </a>
+  </ng-container>
+</nav>

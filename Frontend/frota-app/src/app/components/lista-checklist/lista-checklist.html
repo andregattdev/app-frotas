@@ -1,0 +1,114 @@
+<main class="checklist-page">
+	<a class="voltar-veiculos" [routerLink]="rotaVolta">
+		<mat-icon>arrow_back</mat-icon>
+		{{ isMotorista ? 'Voltar para minhas rotas' : isAssistenteFrota ? 'Voltar à gestão da frota' : 'Voltar para veículos' }}
+	</a>
+
+	<header class="checklist-header">
+		<div>
+			<span class="eyebrow">{{ isMotorista ? 'Checklist do motorista' : 'Inspeção da frota' }}</span>
+			<h1>{{ veiculoId ? 'Checklist: ' + (veiculo?.modelo || 'Veículo') : (isMotorista ? 'Checklist do veículo' : 'Checklist dos veículos') }} <span class="identificacao-frota" *ngIf="veiculoId">| Frota {{ veiculo?.frota || '-' }}</span></h1>
+			<p>{{ veiculoId ? 'Registre as condições do veículo e relate qualquer problema encontrado na rota.' : (isMotorista ? 'Selecione um veículo atualmente atribuído a você para registrar a inspeção.' : 'Selecione um veículo para iniciar uma inspeção.') }}</p>
+		</div>
+	</header>
+
+	<section class="selecao-veiculos" *ngIf="!veiculoId">
+		<div class="cabecalho-selecao">
+			<h2>Escolha um veículo</h2>
+			<span>{{ veiculos.length }} disponíveis</span>
+		</div>
+		<p class="estado-lista" *ngIf="carregando">Carregando veículos...</p>
+		<p class="estado-lista erro-acesso" *ngIf="!carregando && erroVeiculos" role="alert">
+			Não foi possível consultar os veículos atribuídos à sua rota.
+			<button type="button" (click)="recarregarVeiculosMotorista()">Tentar novamente</button>
+		</p>
+		<p class="estado-lista erro-acesso" *ngIf="!carregando && veiculoNaoAtribuido">Esse veículo não está atribuído a você. Selecione um dos veículos da sua rota.</p>
+		<p class="estado-lista" *ngIf="!carregando && isMotorista && !erroVeiculos && veiculos.length === 0">Você não tem veículos atribuídos no momento.</p>
+		<p class="estado-lista" *ngIf="!carregando && !isMotorista && veiculos.length === 0">Nenhum veículo cadastrado.</p>
+		<div class="cards-veiculos" *ngIf="!carregando && veiculos.length > 0">
+			<a class="card-veiculo" *ngFor="let item of veiculos" [routerLink]="['/checklist']" [queryParams]="{ veiculo: item.id }">
+				<div class="icone-veiculo"><mat-icon>directions_car</mat-icon></div>
+				<div class="dados-veiculo">
+					<strong>{{ item.modelo || 'Veículo sem modelo' }}</strong>
+					<span>Frota {{ item.frota || '-' }}</span>
+					<small>Placa {{ item.placa || '-' }}</small>
+				</div>
+				<mat-icon class="seta-card">arrow_forward</mat-icon>
+			</a>
+		</div>
+	</section>
+
+	<section class="checklist-formulario" *ngIf="veiculoId && (!isMotorista || veiculoAutorizado)">
+		<h2>Nova inspeção</h2>
+		<form [formGroup]="checklistForm" (ngSubmit)="salvarChecklist()">
+			<label class="campo-km">Quilometragem
+				<input id="checklist-quilometragem" type="number" formControlName="quilometragem" min="0" placeholder="Ex.: 45200">
+			</label>
+
+			<div class="itens-checklist">
+				<label class="item-checklist" *ngFor="let item of itens">
+					<input [id]="'checklist-' + item[0]" type="checkbox" [formControlName]="item[0]">
+					<span>{{ item[1] }}</span>
+					<strong>{{ checklistForm.controls[item[0]].value ? 'OK' : 'Verificar' }}</strong>
+				</label>
+			</div>
+
+			<label class="campo-observacoes">Observações
+				<textarea id="checklist-observacoes" formControlName="observacoes" rows="3" placeholder="Descreva problemas encontrados na rota ou outras observações"></textarea>
+			</label>
+
+			<button class="botao-salvar-checklist" type="submit" [disabled]="salvando">
+				<mat-icon>save</mat-icon>
+				{{ salvando ? 'Salvando...' : 'Salvar checklist' }}
+			</button>
+			<a class="botao-manutencao" *ngIf="temPendencias && !isMotorista && !isAssistenteFrota" [routerLink]="['/veiculos/manutencao']" [queryParams]="{ veiculo: veiculoId }">
+				<mat-icon>build</mat-icon>
+				Ver manutenção necessária
+			</a>
+			<p class="aviso-pendencias" *ngIf="temPendencias && (isMotorista || isAssistenteFrota)" role="status">
+				Há itens para atenção neste veículo. Registre os detalhes nas observações para que a equipe possa providenciar a manutenção.
+			</p>
+		</form>
+	</section>
+
+	<section class="historico-checklist" *ngIf="veiculoId && (!isMotorista || veiculoAutorizado)">
+		<div class="cabecalho-historico">
+			<h2>Histórico de inspeções</h2>
+			<button type="button" class="botao-atualizar" (click)="carregarChecklists()" title="Atualizar histórico">
+				<mat-icon>refresh</mat-icon>
+			</button>
+		</div>
+		<div class="campo-busca">
+			<mat-icon>search</mat-icon>
+			<input id="checklist-busca" type="search" [value]="termoBusca" (input)="buscar($any($event.target).value)" placeholder="Buscar por quilometragem ou observação" aria-label="Buscar checklists">
+			<button *ngIf="termoBusca" type="button" (click)="limparBusca()" aria-label="Limpar busca" title="Limpar busca"><mat-icon>close</mat-icon></button>
+		</div>
+		<p class="estado-lista" *ngIf="carregando">Carregando histórico...</p>
+		<p class="estado-lista" *ngIf="!carregando && checklists.length === 0">{{ termoBusca ? 'Nenhuma inspeção encontrada.' : 'Nenhuma inspeção registrada.' }}</p>
+		<details class="historico-item" *ngFor="let checklist of checklists" [open]="checklist === ultimaInspecao">
+			<summary class="historico-resumo">
+				<div>
+					<strong>{{ checklist.dataHora | date:'dd/MM/yyyy HH:mm' }}</strong>
+					<span>{{ checklist.quilometragem ?? '-' }} km</span>
+					<span>Motorista: {{ checklist.motorista?.nome || 'não identificado' }}</span>
+				</div>
+				<span class="status-checklist">Ver itens da inspeção</span>
+			</summary>
+			<div class="historico-detalhes">
+				<div class="historico-itens">
+					<div class="historico-detalhe-item" *ngFor="let item of itens">
+						<span>{{ item[1] }}</span>
+						<strong [class.item-pendente]="checklist[item[0]] === false">
+							{{ checklist[item[0]] === true ? 'OK' : checklist[item[0]] === false ? 'Atenção' : 'Não informado' }}
+						</strong>
+					</div>
+				</div>
+				<div class="historico-observacoes" *ngIf="checklist.observacoes?.trim()">
+					<strong>Observações do motorista</strong>
+					<p>{{ checklist.observacoes }}</p>
+				</div>
+			</div>
+		</details>
+	</section>
+
+</main>

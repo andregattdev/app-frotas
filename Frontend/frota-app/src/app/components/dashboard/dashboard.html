@@ -1,0 +1,70 @@
+<main class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Visão geral</p>
+      <h1>Operação da frota</h1>
+      <p>Acompanhe os cadastros essenciais e mantenha a operação organizada.</p>
+    </div>
+    <button class="refresh-button" type="button" (click)="carregarResumo()" [disabled]="carregando" title="Atualizar indicadores">
+      <mat-icon>refresh</mat-icon><span>Atualizar</span>
+    </button>
+  </header>
+
+  <p class="feedback" *ngIf="carregando">Atualizando indicadores...</p>
+  <div class="feedback error" *ngIf="erroCarregamento">
+    <span>Não foi possível atualizar os indicadores.</span>
+    <button type="button" (click)="carregarResumo()">Tentar novamente</button>
+  </div>
+
+  <section class="metric-grid" aria-label="Indicadores da frota">
+    <a class="metric-card" routerLink="/veiculos">
+      <span class="metric-icon vehicles"><mat-icon>directions_car</mat-icon></span>
+      <span class="metric-content"><span>Veículos</span><strong>{{ veiculos.length }}</strong><small>cadastrados na frota</small></span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+    <a class="metric-card" routerLink="/motoristas">
+      <span class="metric-icon drivers"><mat-icon>badge</mat-icon></span>
+      <span class="metric-content"><span>Motoristas</span><strong>{{ motoristas.length }}</strong><small>profissionais cadastrados</small></span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+    <a class="metric-card" routerLink="/enderecos">
+      <span class="metric-icon locations"><mat-icon>location_on</mat-icon></span>
+      <span class="metric-content"><span>Endereços</span><strong>{{ enderecos.length }}</strong><small>locais disponíveis</small></span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+    <a class="metric-card" routerLink="/checklist">
+      <span class="metric-icon checks"><mat-icon>fact_check</mat-icon></span>
+      <span class="metric-content"><span>Checklists</span><strong>{{ checklists.length }}</strong><small>verificações realizadas</small></span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+  </section>
+
+  <section class="dashboard-lower">
+    <div class="panel alerts-panel">
+      <div class="panel-heading"><div><p class="eyebrow">Atenção</p><h2>Próximas ações</h2></div><mat-icon>notifications</mat-icon></div>
+      <ul *ngIf="!carregando">
+        <li *ngFor="let alerta of alertas"><mat-icon>info</mat-icon><span>{{ alerta }}</span></li>
+        <li class="checklist-alert" *ngFor="let alerta of veiculosAtencaoChecklist">
+          <mat-icon>warning</mat-icon>
+          <a [routerLink]="['/checklist']" [queryParams]="{ veiculo: alerta.veiculo.id }">
+            <strong>{{ alerta.veiculo.modelo || 'Veículo' }} · Frota {{ alerta.veiculo.frota || '-' }} · {{ alerta.veiculo.placa }}</strong>
+            <span>{{ alerta.motivo }}</span>
+          </a>
+        </li>
+      </ul>
+      <p class="empty" *ngIf="carregando">Verificando pendências...</p>
+      <p class="empty" *ngIf="!carregando && alertas.length === 0 && veiculosAtencaoChecklist.length === 0">Nenhum veículo precisa de atenção no checklist.</p>
+    </div>
+
+    <div class="panel shortcuts-panel">
+      <div class="panel-heading"><div><p class="eyebrow">Acesso rápido</p><h2>Gerenciar</h2></div></div>
+      <div class="shortcut-grid">
+        <a routerLink="/veiculos"><mat-icon>add_circle</mat-icon><span>Veículos</span></a>
+        <a routerLink="/motoristas"><mat-icon>person_add</mat-icon><span>Motoristas</span></a>
+        <a routerLink="/rotas-diarias"><mat-icon>route</mat-icon><span>Rotas diárias</span></a>
+        <a routerLink="/registros-paradas"><mat-icon>assignment</mat-icon><span>Registros de rota</span></a>
+        <a routerLink="/checklist"><mat-icon>playlist_add_check</mat-icon><span>Checklists</span></a>
+      </div>
+    </div>
+  </section>
+</main>

@@ -1,0 +1,443 @@
+/* ==========================================================================
+   Topbar (Cabeçalho Superior Moderno - Desktop e Mobile)
+   ========================================================================== */
+.topbar {
+  position: sticky;
+  z-index: 50;
+  top: 0;
+  width: 100%;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+}
+
+.topbar-container {
+  display: flex;
+  max-width: 1360px;
+  min-height: 64px;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+/* Marca / Logo */
+.brand {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.brand:hover {
+  opacity: 0.94;
+  transform: translateY(-1px);
+}
+
+.brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+}
+
+.brand-mark mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand strong {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.brand small {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Navegação Desktop */
+.menu-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.menu-links a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 8px;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-links a mat-icon {
+  color: #94a3b8;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  transition: color 0.18s ease;
+}
+
+.menu-links a:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-links a:hover mat-icon {
+  color: #38bdf8;
+}
+
+.menu-links a.active {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.menu-links a.active mat-icon {
+  color: #38bdf8;
+}
+
+.menu-links .link-instalar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 8px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.menu-links .link-instalar mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #38bdf8;
+}
+
+.menu-links .link-instalar:hover {
+  color: #ffffff;
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+}
+
+.menu-links .sair {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.18s ease;
+}
+
+.menu-links .sair mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.menu-links .sair:hover {
+  color: #ffffff;
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+}
+
+.menu-toggle {
+  display: none;
+  color: #f8fafc;
+}
+
+/* Bloco de Usuário e Perfil */
+.topbar-usuario-bloco {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.usuario-perfil {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.avatar-usuario {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+  flex-shrink: 0;
+}
+
+.usuario-perfil .dados {
+  display: flex;
+  flex-direction: column;
+}
+
+.usuario-perfil .nome {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.usuario-perfil .cargo {
+  font-size: 11px;
+  font-weight: 500;
+  color: #38bdf8;
+  line-height: 1.2;
+}
+
+.botao-sair-topo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.botao-sair-topo mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #f87171;
+}
+
+.botao-sair-topo:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.mobile-only {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Menu Inferior (Bottom Navigation Bar) - Mobile First
+   ========================================================================== */
+.menu-inferior {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  height: 64px;
+  padding: 0 max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.35);
+  box-sizing: content-box;
+}
+
+.item-inferior {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
+  color: #94a3b8;
+  text-decoration: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.item-inferior mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  color: #94a3b8;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.item-inferior span {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+
+.item-inferior:hover {
+  color: #ffffff;
+}
+
+.item-inferior:hover mat-icon {
+  color: #38bdf8;
+}
+
+.item-inferior.active {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.item-inferior.active mat-icon {
+  color: #38bdf8;
+  transform: translateY(-2px);
+}
+
+.item-inferior.botao-sair:hover {
+  color: #f87171;
+}
+
+.item-inferior.botao-sair:hover mat-icon {
+  color: #f87171;
+}
+
+/* ==========================================================================
+   Breakpoints e Responsividade
+   ========================================================================== */
+@media (max-width: 1100px) {
+  .menu-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: flex !important;
+  }
+
+  .menu-links {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 24px 20px;
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    overflow-y: auto;
+    display: none;
+    z-index: 100;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .menu-links.aberto {
+    display: flex;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .menu-links a {
+    height: 48px;
+    padding: 0 16px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .menu-links a mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .menu-divisor-mobile {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 12px 0;
+  }
+
+  .menu-links .sair {
+    height: 48px;
+    margin-top: 8px;
+    justify-content: center;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .menu-links .link-instalar {
+    height: 48px;
+    justify-content: center;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+}

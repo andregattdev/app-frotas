@@ -1,0 +1,210 @@
+<main class="rota-page">
+  <a class="voltar" routerLink="/dashboard"><mat-icon>arrow_back</mat-icon> Voltar ao painel</a>
+
+  <header class="rota-header">
+    <div>
+      <span class="eyebrow">Planejamento e acompanhamento</span>
+      <h1>Rotas diárias</h1>
+      <p>Escolha motorista, veículo e data; use o mapa ou o CEP para montar a sequência de paradas.</p>
+    </div>
+    <button class="botao-atualizar" type="button" (click)="carregarDados()" [disabled]="carregando">
+      <mat-icon>refresh</mat-icon> Atualizar
+    </button>
+  </header>
+
+  <p class="aviso-edicao" *ngIf="rotaEmEdicaoId !== null">
+    Editando rota em andamento. Paradas com registro ficam bloqueadas para preservar o histórico; não é possível remover paradas nesta edição.
+    <button type="button" (click)="cancelarEdicaoRota()" [disabled]="salvando">Cancelar edição da rota</button>
+  </p>
+  <section class="painel-atribuicao" aria-label="Dados da rota">
+    <div class="campo-planejamento">
+      <label for="rota-motorista">Motorista</label>
+      <select id="rota-motorista" [(ngModel)]="motoristaId" [ngModelOptions]="{standalone: true}" [disabled]="rotaEmEdicaoId !== null">
+        <option [ngValue]="null">Selecione um motorista com acesso</option>
+        <option *ngFor="let motorista of motoristas" [ngValue]="motorista.id">{{ motorista.nome }}</option>
+      </select>
+    </div>
+    <div class="campo-planejamento">
+      <label for="rota-veiculo">Veículo</label>
+      <select id="rota-veiculo" [(ngModel)]="veiculoId" [ngModelOptions]="{standalone: true}" [disabled]="rotaEmEdicaoId !== null">
+        <option [ngValue]="null">Selecione um veículo</option>
+        <option *ngFor="let veiculo of veiculos" [ngValue]="veiculo.id">{{ veiculo.placa }} · {{ veiculo.marca }} {{ veiculo.modelo }}</option>
+      </select>
+    </div>
+    <div class="campo-planejamento campo-data">
+      <label for="rota-data">Data da rota</label>
+      <input id="rota-data" type="date" [(ngModel)]="dataRota" [ngModelOptions]="{standalone: true}" [min]="dataHoje()" [disabled]="rotaEmEdicaoId !== null">
+    </div>
+  </section>
+
+  <p class="estado" *ngIf="carregando">Carregando motoristas, veículos e rotas...</p>
+  <div class="erro-carregamento" *ngIf="erro" role="alert">
+    <span>Não foi possível carregar os dados de planejamento.</span>
+    <button type="button" (click)="carregarDados()">Tentar novamente</button>
+  </div>
+
+  <section class="rota-conteudo" *ngIf="!carregando && !erro">
+    <div class="painel-mapa">
+      <div class="painel-titulo">
+        <div><span class="eyebrow">Visualização</span><h2>{{ rotaEmEdicaoId !== null ? 'Atualizar rota' : 'Mapa da rota' }}</h2></div>
+        <span class="contador">{{ paradas.length }} {{ paradas.length === 1 ? 'parada' : 'paradas' }}</span>
+      </div>
+      <p class="instrucao-mapa">Clique no mapa para definir as coordenadas da parada que está sendo editada.</p>
+      <div #mapElement class="mapa" role="application" aria-label="Mapa interativo para planejar as paradas"></div>
+      <div class="legenda">
+        <span><i class="marcador-legenda entrega"></i> Entrega</span>
+        <span><i class="marcador-legenda retirada"></i> Retirada</span>
+        <span><i class="linha-legenda"></i> Sequência da rota</span>
+      </div>
+    </div>
+
+    <aside class="painel-formulario">
+      <div class="painel-titulo">
+        <div>
+          <span class="eyebrow">{{ indiceParada(paradaAtual) >= 0 ? 'Editar' : 'Novo ponto' }}</span>
+          <h2>{{ indiceParada(paradaAtual) >= 0 ? 'Atualizar parada' : 'Adicionar parada' }}</h2>
+        </div>
+        <button *ngIf="indiceParada(paradaAtual) >= 0" class="botao-limpar" type="button" (click)="cancelarEdicao()">Cancelar edição</button>
+      </div>
+
+      <div class="form-parada">
+        <label for="parada-descricao">Descrição da parada (opcional)</label>
+        <input id="parada-descricao" name="descricao" [(ngModel)]="paradaAtual.descricao" [ngModelOptions]="{standalone: true}" maxlength="255" placeholder="Ex.: Entrega do pedido #123">
+
+        <label for="parada-estabelecimento">Nome do estabelecimento (opcional)</label>
+        <input id="parada-estabelecimento" name="estabelecimento" [(ngModel)]="paradaAtual.nomeEstabelecimento" [ngModelOptions]="{standalone: true}" maxlength="255" placeholder="Ex.: Mercado Central">
+
+        <label for="parada-cep">CEP para preencher o endereço</label>
+        <div class="busca-cep">
+          <input id="parada-cep" name="cep" [(ngModel)]="paradaAtual.cep" [ngModelOptions]="{standalone: true}" maxlength="9" inputmode="numeric" placeholder="00000-000">
+          <button type="button" (click)="buscarCep()" [disabled]="buscandoCep || identificandoCoordenada || !paradaAtual.cep.trim()">
+            <mat-icon>search</mat-icon>{{ buscandoCep ? 'Buscando...' : 'Buscar CEP' }}
+          </button>
+        </div>
+        <div class="endereco-extra">
+          <label for="parada-numero">Número (opcional)</label>
+          <input id="parada-numero" name="numero" [(ngModel)]="paradaAtual.numero" [ngModelOptions]="{standalone: true}" maxlength="20" placeholder="Número">
+          <label for="parada-complemento">Complemento (opcional)</label>
+          <input id="parada-complemento" name="complemento" [(ngModel)]="paradaAtual.complemento" [ngModelOptions]="{standalone: true}" maxlength="100" placeholder="Apto., bloco...">
+        </div>
+        <p class="ajuda-busca">O CEP busca o endereço no ViaCEP e tenta localizar as coordenadas. Você também pode clicar no mapa.</p>
+
+        <label for="parada-busca-local">Endereço ou nome para localizar</label>
+        <div class="busca-local">
+          <input id="parada-busca-local" [ngModel]="buscaLocal" (ngModelChange)="alterarBuscaLocal($event)" [ngModelOptions]="{standalone: true}" placeholder="Digite o endereço ou estabelecimento">
+          <button type="button" (click)="buscarLocal()" [disabled]="buscandoLocal || !buscaLocal.trim()">
+            <mat-icon>search</mat-icon>{{ buscandoLocal ? 'Buscando...' : 'Buscar local' }}
+          </button>
+        </div>
+        <p class="erro-busca" *ngIf="erroBuscaLocal" role="status">{{ erroBuscaLocal }}</p>
+        <ul class="resultados-local" *ngIf="resultadosBusca.length">
+          <li *ngFor="let resultado of resultadosBusca">
+            <button type="button" (click)="selecionarResultado(resultado)">
+              <strong>{{ resultado.name || resultado.display_name }}</strong>
+              <span>{{ resultado.display_name }}</span>
+            </button>
+          </li>
+        </ul>
+
+        <label for="parada-endereco">Endereço</label>
+        <input id="parada-endereco" name="endereco" [(ngModel)]="paradaAtual.endereco" [ngModelOptions]="{standalone: true}" maxlength="500" placeholder="Preenchido pelo CEP ou pelo mapa">
+
+        <label for="parada-tipo">Tipo de parada</label>
+        <select id="parada-tipo" name="tipo" [(ngModel)]="paradaAtual.tipo" [ngModelOptions]="{standalone: true}">
+          <option value="ENTREGA">Entrega</option>
+          <option value="RETIRADA">Retirada</option>
+        </select>
+
+        <div class="coordenadas">
+          <div>
+            <label for="parada-latitude">Latitude</label>
+            <input id="parada-latitude" name="latitude" type="number" step="any" [(ngModel)]="paradaAtual.latitude" (ngModelChange)="atualizarMapa()" [ngModelOptions]="{standalone: true}" placeholder="Clique no mapa">
+          </div>
+          <div>
+            <label for="parada-longitude">Longitude</label>
+            <input id="parada-longitude" name="longitude" type="number" step="any" [(ngModel)]="paradaAtual.longitude" (ngModelChange)="atualizarMapa()" [ngModelOptions]="{standalone: true}" placeholder="Clique no mapa">
+          </div>
+        </div>
+        <p class="status-coordenada" *ngIf="mensagemCoordenada" role="status" aria-live="polite">{{ mensagemCoordenada }}</p>
+        <p class="erro-formulario" *ngIf="erroFormulario" role="alert">{{ erroFormulario }}</p>
+
+        <button class="botao-principal" type="button" (click)="indiceParada(paradaAtual) >= 0 ? salvarEdicaoParada() : adicionarParada()" [disabled]="buscandoCep || buscandoLocal || identificandoCoordenada">
+          <mat-icon>{{ indiceParada(paradaAtual) >= 0 ? 'save' : 'add_location_alt' }}</mat-icon>
+          {{ indiceParada(paradaAtual) >= 0 ? 'Salvar alterações' : 'Adicionar parada à sequência' }}
+        </button>
+      </div>
+    </aside>
+
+    <section class="painel-paradas">
+      <div class="painel-titulo">
+        <div><span class="eyebrow">Ordem de visita</span><h2>Sequência das paradas</h2></div>
+        <span class="contador">{{ paradas.length }} total</span>
+      </div>
+      <p class="vazio" *ngIf="paradas.length === 0">Ainda não há paradas. Use o mapa, o CEP ou a busca de local para montar a rota.</p>
+      <ol class="lista-paradas" *ngIf="paradas.length > 0">
+        <li *ngFor="let parada of paradas; let indice = index" [class.selecionada]="paradaAtual.id === parada.id" [class.protegida]="paradaProtegida(parada)">
+          <span class="numero-parada" [class.retirada]="parada.tipo === 'RETIRADA'">{{ indice + 1 }}</span>
+          <div class="dados-parada">
+            <strong>{{ parada.nomeEstabelecimento || parada.descricao }}</strong>
+            <span *ngIf="parada.nomeEstabelecimento && parada.descricao">{{ parada.descricao }}</span>
+            <span *ngIf="parada.endereco">{{ parada.endereco }}</span>
+            <span>{{ parada.tipo === 'ENTREGA' ? 'Entrega' : 'Retirada' }} · {{ parada.latitude | number:'1.4-6' }}, {{ parada.longitude | number:'1.4-6' }}</span>
+          </div>
+          <div class="acoes-parada">
+            <button type="button" (click)="moverParada(indice, -1)" [disabled]="!podeMoverParada(indice, -1)" [attr.aria-label]="'Mover parada ' + (indice + 1) + ' para cima'" title="Mover para cima"><mat-icon>arrow_upward</mat-icon></button>
+            <button type="button" (click)="moverParada(indice, 1)" [disabled]="!podeMoverParada(indice, 1)" [attr.aria-label]="'Mover parada ' + (indice + 1) + ' para baixo'" title="Mover para baixo"><mat-icon>arrow_downward</mat-icon></button>
+            <button type="button" (click)="editarParada(parada)" [disabled]="paradaProtegida(parada)" [attr.aria-label]="'Editar parada ' + (indice + 1)" title="Editar"><mat-icon>edit</mat-icon></button>
+            <span class="selo-protegida" *ngIf="paradaProtegida(parada)">Com registro · bloqueada</span>
+            <button *ngIf="rotaEmEdicaoId === null" class="excluir" type="button" (click)="excluirParada(parada)" [attr.aria-label]="'Remover parada ' + (indice + 1)" title="Remover"><mat-icon>delete</mat-icon></button>
+          </div>
+        </li>
+      </ol>
+      <p class="erro-formulario" *ngIf="erroFormulario" role="alert">{{ erroFormulario }}</p>
+      <footer class="acoes-form">
+        <p>{{ rotaEmEdicaoId !== null ? 'As alterações serão enviadas ao motorista imediatamente.' : 'A ordem acima será a ordem exibida para o motorista.' }}</p>
+        <button class="botao-programar" type="button" (click)="criarRota()" [disabled]="salvando || carregando || buscandoCep || buscandoLocal || identificandoCoordenada">
+          <mat-icon>{{ rotaEmEdicaoId !== null ? 'save' : 'event_available' }}</mat-icon>{{ salvando ? 'Salvando rota...' : rotaEmEdicaoId !== null ? 'Salvar atualizações' : 'Programar rota' }}
+        </button>
+      </footer>
+    </section>
+  </section>
+
+  <section class="lista-rotas" aria-labelledby="titulo-lista-rotas">
+    <div class="painel-titulo">
+      <div><span class="eyebrow">Execuções e pendências</span><h2 id="titulo-lista-rotas">Rotas programadas</h2></div>
+    </div>
+    <p class="vazio" *ngIf="!carregando && !erro && rotas.length === 0">Nenhuma rota diária programada.</p>
+    <article class="rota-card" *ngFor="let rota of rotas">
+      <header class="rota-cabecalho">
+        <div>
+          <span class="eyebrow">{{ dataLabel(rota.dataRota) }} · {{ rota.veiculoPlaca }}</span>
+          <h3>{{ rota.motoristaNome }}</h3>
+          <p>{{ rota.paradas.length }} {{ rota.paradas.length === 1 ? 'parada' : 'paradas' }}</p>
+        </div>
+        <span class="status-rota" [class.finalizada]="rota.status === 'FINALIZADA'">
+          {{ rota.status === 'FINALIZADA' ? 'Dia finalizado' : rota.status === 'EM_ANDAMENTO' ? 'Em andamento' : 'Programada' }}
+        </span>
+        <button *ngIf="rota.status !== 'FINALIZADA'" class="botao-editar-rota" type="button"
+          (click)="editarRota(rota)" [disabled]="rotaEmEdicaoId !== null && rotaEmEdicaoId !== rota.id">
+          <mat-icon>edit</mat-icon> Atualizar rota
+        </button>
+      </header>
+      <ol class="lista-paradas">
+        <li *ngFor="let parada of rota.paradas">
+          <div>
+            <strong>{{ parada.nomeEstabelecimento || parada.descricao }}</strong>
+            <p>{{ parada.descricao }}<span *ngIf="parada.endereco"> · {{ parada.endereco }}</span></p>
+          </div>
+          <span class="status-parada"
+                [class.realizada]="statusDaParada(rota, parada) === 'Realizada'"
+                [class.pendente]="statusDaParada(rota, parada).startsWith('Pendente')"
+                [class.nao-realizada]="statusDaParada(rota, parada).startsWith('Não realizada')">
+            {{ statusDaParada(rota, parada) }}
+          </span>
+          <p class="relato" *ngFor="let registro of registrosDaParada(rota, parada)" [hidden]="!registro.observacao">{{ registro.observacao }}</p>
+        </li>
+      </ol>
+      <p class="fechamento" *ngIf="rota.finalizadaEm">Finalizada em {{ rota.finalizadaEm | date:'dd/MM/yyyy HH:mm' }}</p>
+    </article>
+  </section>
+</main>

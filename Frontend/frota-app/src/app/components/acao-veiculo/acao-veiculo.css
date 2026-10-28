@@ -1,0 +1,79 @@
+.acao-veiculo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 64px);
+  padding: 32px 24px 80px;
+  box-sizing: border-box;
+  color: var(--text-main);
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.voltar-veiculos {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--slate-600);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.voltar-veiculos mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.voltar-veiculos:hover {
+  color: var(--primary-600);
+  transform: translateX(-2px);
+}
+
+.icone-acao {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #ffffff;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+  margin-bottom: 20px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--slate-900);
+}
+
+p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--slate-500);
+  max-width: 480px;
+}
+
+.aviso {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 24px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+  font-size: 12px;
+  font-weight: 600;
+}

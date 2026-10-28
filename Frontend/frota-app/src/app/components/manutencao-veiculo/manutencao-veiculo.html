@@ -1,0 +1,66 @@
+<main class="manutencao-page">
+  <a class="voltar-veiculos" routerLink="/veiculos">
+    <mat-icon>arrow_back</mat-icon>
+    Voltar para veículos
+  </a>
+
+  <header class="manutencao-header">
+    <span class="eyebrow">Gestão da frota</span>
+    <h1>Manutenção: {{ veiculo?.modelo || 'Veículo' }} <span class="identificacao-frota">| Frota {{ veiculo?.frota || '-' }}</span></h1>
+    <p>As pendências abaixo foram identificadas na última inspeção registrada.</p>
+  </header>
+
+  <p class="estado-lista" *ngIf="carregando">Consultando a última inspeção...</p>
+
+  <section class="sem-inspecao" *ngIf="!carregando && !checklist">
+    <mat-icon>fact_check</mat-icon>
+    <h2>Nenhuma inspeção registrada</h2>
+    <p>Faça uma inspeção para identificar possíveis necessidades de manutenção.</p>
+    <a class="botao-principal" [routerLink]="['/checklist']" [queryParams]="{ veiculo: veiculoId }">
+      <mat-icon>checklist</mat-icon>
+      Fazer inspeção
+    </a>
+  </section>
+
+  <ng-container *ngIf="!carregando && checklist">
+    <section class="status-manutencao" [class.com-pendencias]="temPendencias">
+      <mat-icon>{{ temPendencias ? 'warning' : 'verified' }}</mat-icon>
+      <div>
+        <strong>{{ temPendencias ? 'Manutenção necessária' : 'Nenhuma pendência identificada' }}</strong>
+        <span>Última inspeção: {{ checklist.dataHora | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </section>
+
+    <section class="painel-manutencao" *ngIf="temPendencias">
+      <div class="painel-titulo">
+        <div>
+          <span class="eyebrow">Atenção</span>
+          <h2>Pontos para verificar</h2>
+        </div>
+        <mat-icon>build</mat-icon>
+      </div>
+
+      <ul *ngIf="itensPendentes.length > 0">
+        <li *ngFor="let item of itensPendentes">
+          <mat-icon>priority_high</mat-icon>
+          {{ item }}
+        </li>
+      </ul>
+
+      <div class="observacoes" *ngIf="checklist.observacoes">
+        <strong>Observações da inspeção</strong>
+        <p>{{ checklist.observacoes }}</p>
+      </div>
+    </section>
+
+    <section class="resumo-inspecao">
+      <span>Quilometragem registrada</span>
+      <strong>{{ checklist.quilometragem || '-' }} km</strong>
+    </section>
+
+    <a class="botao-principal" [routerLink]="['/checklist']" [queryParams]="{ veiculo: veiculoId }">
+      <mat-icon>checklist</mat-icon>
+      Ver histórico de inspeções
+    </a>
+  </ng-container>
+</main>

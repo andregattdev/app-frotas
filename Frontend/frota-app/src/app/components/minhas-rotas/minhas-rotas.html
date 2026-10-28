@@ -1,0 +1,181 @@
+<main class="minhas-rotas">
+  <header>
+    <span class="eyebrow">Área do motorista</span>
+    <h1>Minhas rotas</h1>
+    <p>Consulte suas rotas do dia, registre cada parada e finalize o expediente.</p>
+  </header>
+  <section class="sincronizacao" [class.offline]="!offline.conectado()"
+    [class.erro-armazenamento]="offline.erroArmazenamento()"
+    *ngIf="!offline.conectado() || offline.fila().length || offline.erroArmazenamento()" aria-live="polite">
+    <div>
+      <strong>{{ offline.conectado() ? 'Fila de sincronização' : 'Sem conexão com a internet' }}</strong>
+      <p *ngIf="offline.fila().length">
+        {{ offline.fila().length }} {{ offline.fila().length === 1 ? 'registro' : 'registros' }} aguardando sincronização.
+      </p>
+      <p *ngIf="offline.erroArmazenamento()" role="alert">{{ offline.erroArmazenamento() }}</p>
+    </div>
+    <button type="button" (click)="tentarSincronizar()" [disabled]="!offline.conectado() || !offline.fila().length">
+      Sincronizar agora
+    </button>
+  </section>
+  <section class="alertas-manutencao" *ngIf="encaminhamentos.length > 0" aria-label="Alertas de manutenção">
+    <div class="alerta-titulo"><mat-icon>warning</mat-icon><strong>Veículo encaminhado para manutenção</strong></div>
+    <article *ngFor="let item of encaminhamentos">
+      <strong>{{ item.veiculo.placa }} · {{ item.veiculo.marca }} {{ item.veiculo.modelo }}</strong>
+      <span>Leve o veículo à oficina <strong>{{ item.oficina.nomeOficina }}</strong>.</span>
+      <span *ngIf="item.oficina.endereco">
+        {{ item.oficina.endereco.logradouro }}, {{ item.oficina.endereco.numero }} — {{ item.oficina.endereco.bairro }},
+        {{ item.oficina.endereco.cidade }}/{{ item.oficina.endereco.estado }} · CEP {{ item.oficina.endereco.cep }}
+      </span>
+      <span *ngIf="item.orientacao">Orientações: {{ item.orientacao }}</span>
+      <a *ngIf="urlGoogleMapsOficina(item) as urlMaps"
+         [href]="urlMaps" target="_blank" rel="noopener noreferrer">Navegar até a oficina</a>
+    </article>
+  </section>
+  <div class="erro alerta-erro" *ngIf="erroEncaminhamentos" role="alert">
+    <span>Não foi possível carregar os avisos de manutenção.</span>
+    <button type="button" (click)="carregarEncaminhamentos()">Tentar novamente</button>
+  </div>
+  <p class="estado" *ngIf="carregando">Carregando suas rotas...</p>
+  <section class="erro" *ngIf="erro" role="alert">
+    <p>Não foi possível carregar suas rotas.</p>
+    <button type="button" (click)="carregarRotas()">Tentar novamente</button>
+  </section>
+  <p class="vazio" *ngIf="!carregando && !erro && rotas.length === 0">Você ainda não tem rotas atribuídas.</p>
+  <article class="rota-card" *ngFor="let rota of rotas">
+    <header class="veiculo">
+      <div>
+        <span class="eyebrow">Veículo {{ rota.veiculo.frota || '' }}</span>
+        <h2>{{ rota.veiculo.marca }} {{ rota.veiculo.modelo }}</h2>
+        <p>
+          Placa {{ rota.veiculo.placa }}
+          <span *ngIf="rota.dataRota"> · Rota de {{ rota.dataRota | date:'dd/MM/yyyy':'UTC' }}</span>
+          <span *ngIf="!rota.dataRota"> · Atribuída em {{ rota.atribuidaEm | date:'dd/MM/yyyy HH:mm' }}</span>
+        </p>
+      </div>
+      <span class="contador" [class.finalizada]="rota.status === 'FINALIZADA'">
+        {{ rota.status === 'FINALIZADA' ? 'Dia finalizado' : rotuloRota(rota) }}
+      </span>
+    </header>
+    <button class="botao-mapa" type="button" (click)="alternarMapa(rota)"
+      [attr.aria-expanded]="rotaMapaId === idMapa(rota)">
+      <mat-icon>map</mat-icon>
+      {{ rotaMapaId === idMapa(rota) ? 'Ocultar mapa da rota' : 'Ver mapa da rota' }}
+    </button>
+    <a class="botao-checklist-rota" [routerLink]="['/checklist']" [queryParams]="{ veiculo: rota.veiculo.id }">
+      <mat-icon>fact_check</mat-icon>
+      Fazer checklist deste veículo
+    </a>
+    <section class="mapa-rota-container" *ngIf="rotaMapaId === idMapa(rota)"
+      [attr.aria-label]="'Mapa das paradas do veículo ' + rota.veiculo.placa">
+      <div class="legenda-mapa">
+        <span><i class="marcador-legenda entrega"></i> Entrega</span>
+        <span><i class="marcador-legenda retirada"></i> Retirada</span>
+        <small>Toque em um número para ver o endereço.</small>
+      </div>
+      <p class="aviso-mapa" *ngIf="paradasComCoordenadas(rota) < rota.paradas.length">
+        Algumas paradas não têm coordenadas e não aparecem no mapa. Use “Navegar no Google Maps” na parada para buscá-la pelo endereço.
+      </p>
+      <p class="aviso-mapa" *ngIf="paradasComCoordenadas(rota) === 0">
+        Esta rota ainda não tem paradas com coordenadas para mostrar no mapa.
+      </p>
+      <div class="mapa-rota" #mapaRota></div>
+    </section>
+    <p class="aviso-rota-legada" *ngIf="rota.rotaId === null">
+      Ao finalizar o dia, esta rota e suas paradas serão registradas para acompanhamento do administrador.
+    </p>
+    <p class="vazio" *ngIf="rota.paradas.length === 0 && rota.status !== 'FINALIZADA'">Esta rota ainda não possui paradas cadastradas.</p>
+    <ol class="paradas" *ngIf="rota.paradas.length > 0 && rota.status !== 'FINALIZADA'">
+      <li *ngFor="let parada of rota.paradas; let indice = index">
+        <span class="numero">{{ indice + 1 }}</span>
+        <div class="parada-conteudo">
+          <strong>{{ parada.nomeEstabelecimento || parada.descricao }}</strong>
+          <p *ngIf="parada.nomeEstabelecimento">{{ parada.descricao }}</p>
+          <p *ngIf="parada.endereco">{{ parada.endereco }}</p>
+          <small>{{ parada.tipo === 'ENTREGA' ? 'Entrega' : 'Retirada' }}</small>
+          <div class="acoes-parada">
+            <span class="selo-registro-pendente"
+              *ngIf="temRegistroPendente(rota, parada)"
+              [class.falhou]="registrosDaParada(rota, parada).at(-1)?.estadoSincronizacao === 'FALHOU'">
+              {{ registrosDaParada(rota, parada).at(-1)?.estadoSincronizacao === 'FALHOU' ? 'Falha no envio' : 'Aguardando sincronização' }}
+            </span>
+            <span class="selo-concluida" *ngIf="paradaConcluida(rota, parada)">{{ rotuloConclusao(parada) }}</span>
+            <ng-container *ngIf="!temRegistroPendente(rota, parada) && !paradaConcluida(rota, parada) && podeRegistrar(rota)">
+              <button class="botao-entregue" type="button" (click)="confirmarConclusao(rota, parada)" [disabled]="registrandoParadaId !== null">
+                {{ registrandoParadaId === parada.id ? 'Salvando...' : rotuloConclusao(parada) }}
+              </button>
+              <button class="botao-ocorrencia" type="button" (click)="registrarOcorrencia(rota, parada)" [disabled]="registrandoParadaId !== null">Ocorrência</button>
+            </ng-container>
+            <span class="selo-pendente" *ngIf="!paradaConcluida(rota, parada) && !podeRegistrar(rota)">
+              Disponível na data programada
+            </span>
+          </div>
+          <ol class="historico-parada" *ngIf="registrosDaParada(rota, parada).length">
+            <li *ngFor="let registro of registrosDaParada(rota, parada)">
+              <strong>{{ registro.tipo === 'OCORRENCIA' ? 'Ocorrência' : rotuloConclusao(parada) }}</strong>
+              <time>{{ registro.registradoEm | date:'dd/MM/yyyy HH:mm' }}</time>
+              <p *ngIf="registro.observacao">{{ registro.observacao }}</p>
+              <small *ngIf="registro.possuiFoto">Foto anexada</small>
+              <small class="estado-sincronizacao" *ngIf="registro.estadoSincronizacao">
+                {{ registro.estadoSincronizacao === 'FALHOU' ? registro.erroSincronizacao : 'Salvo neste aparelho; envio pendente.' }}
+              </small>
+              <button class="tentar-novamente" type="button"
+                *ngIf="registro.estadoSincronizacao === 'FALHOU' && registro.clientRequestId"
+                (click)="tentarRegistroNovamente(registro.clientRequestId!)">
+                Tentar enviar novamente
+              </button>
+            </li>
+          </ol>
+        </div>
+        <a *ngIf="urlGoogleMaps(parada) as urlMaps" class="link-google-maps" [href]="urlMaps"
+           target="_blank" rel="noopener noreferrer">Seguir Rota</a>
+      </li>
+    </ol>
+    <footer class="acoes-rota" *ngIf="podeFinalizar(rota)">
+      <span class="aviso-fila-rota" *ngIf="registrosPendentesDaRota(rota) > 0">
+        Sincronize os registros pendentes antes de finalizar esta rota.
+      </span>
+      <span *ngIf="paradasPendentes(rota) > 0">{{ paradasPendentes(rota) }} {{ paradasPendentes(rota) === 1 ? 'parada pendente' : 'paradas pendentes' }} serão registradas como não realizadas.</span>
+      <span *ngIf="paradasPendentes(rota) === 0">Todas as paradas foram concluídas.</span>
+      <button class="botao-finalizar" type="button" (click)="finalizarDia(rota)" [disabled]="estaFinalizando(rota) || registrandoParadaId !== null || registrosPendentesDaRota(rota) > 0">
+        {{ estaFinalizando(rota) ? 'Finalizando...' : 'Finalizar o dia' }}
+      </button>
+    </footer>
+    <p class="horario-finalizacao" *ngIf="rota.finalizadaEm">Finalizada em {{ rota.finalizadaEm | date:'dd/MM/yyyy HH:mm' }}</p>
+    <section class="resumo-rota-finalizada" *ngIf="rota.status === 'FINALIZADA'" aria-label="Resumo da rota finalizada">
+      <h3>Resumo da rota</h3>
+      <div class="contagens-rota">
+        <p><strong>{{ paradasConcluidasPorTipo(rota, 'ENTREGA').length }} / {{ paradasPorTipo(rota, 'ENTREGA').length }}</strong> entregas realizadas</p>
+        <p><strong>{{ paradasConcluidasPorTipo(rota, 'RETIRADA').length }} / {{ paradasPorTipo(rota, 'RETIRADA').length }}</strong> retiradas realizadas</p>
+      </div>
+      <div class="enderecos-rota">
+        <section>
+          <h4>Entregas</h4>
+          <p class="sem-paradas-resumo" *ngIf="paradasPorTipo(rota, 'ENTREGA').length === 0">Nenhuma entrega nesta rota.</p>
+          <ul>
+            <li *ngFor="let parada of paradasPorTipo(rota, 'ENTREGA')">
+              <span class="estado-parada-resumo" [class.pendente]="!paradaConcluida(rota, parada)">
+                {{ paradaConcluida(rota, parada) ? 'Realizada' : 'Não realizada' }}
+              </span>
+              <strong>{{ parada.nomeEstabelecimento || parada.descricao }}</strong>
+              <span>{{ parada.endereco || 'Endereço não informado' }}</span>
+            </li>
+          </ul>
+        </section>
+        <section>
+          <h4>Retiradas</h4>
+          <p class="sem-paradas-resumo" *ngIf="paradasPorTipo(rota, 'RETIRADA').length === 0">Nenhuma retirada nesta rota.</p>
+          <ul>
+            <li *ngFor="let parada of paradasPorTipo(rota, 'RETIRADA')">
+              <span class="estado-parada-resumo" [class.pendente]="!paradaConcluida(rota, parada)">
+                {{ paradaConcluida(rota, parada) ? 'Realizada' : 'Não realizada' }}
+              </span>
+              <strong>{{ parada.nomeEstabelecimento || parada.descricao }}</strong>
+              <span>{{ parada.endereco || 'Endereço não informado' }}</span>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </section>
+  </article>
+</main>

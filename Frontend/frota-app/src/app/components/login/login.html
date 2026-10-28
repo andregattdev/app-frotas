@@ -1,0 +1,77 @@
+<main class="login-page">
+  <div class="login-background-glow"></div>
+  
+  <section class="login-card" aria-labelledby="login-title">
+    <header class="login-card-header">
+      <div class="brand-badge-row">
+        <div class="login-brand-icon">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+        <span class="badge badge-primary">Portal Operacional</span>
+      </div>
+      <p class="eyebrow">Frota ASG</p>
+      <h1 id="login-title">Acesse sua conta</h1>
+      <p class="descricao">Entre para consultar a gestão da frota ou suas rotas atribuídas.</p>
+    </header>
+
+    <div class="aviso" *ngIf="acessoNegado" role="alert">
+      <mat-icon>info</mat-icon>
+      <span>Esta conta não tem permissão para acessar essa área.</span>
+    </div>
+    
+    <div class="erro" *ngIf="erro" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ erro }}</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="entrar()" novalidate>
+      <div class="form-group">
+        <label for="username">Usuário ou e-mail</label>
+        <div class="input-with-icon">
+          <mat-icon class="input-lead-icon">person_outline</mat-icon>
+          <input 
+            id="username" 
+            formControlName="username" 
+            autocomplete="username" 
+            placeholder="Digite seu usuário ou e-mail" 
+            required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Senha</label>
+        <div class="input-with-icon campo-senha">
+          <mat-icon class="input-lead-icon">lock_outline</mat-icon>
+          <input 
+            id="password" 
+            [type]="mostrarSenha ? 'text' : 'password'" 
+            formControlName="password" 
+            autocomplete="current-password" 
+            placeholder="Digite sua senha" 
+            required>
+          <button 
+            class="alternar-senha" 
+            type="button" 
+            (click)="mostrarSenha = !mostrarSenha"
+            [attr.aria-label]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
+            [attr.aria-pressed]="mostrarSenha">
+            <mat-icon>{{ mostrarSenha ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-entrar" [disabled]="enviando">
+        <mat-icon *ngIf="!enviando">login</mat-icon>
+        <span *ngIf="!enviando">Entrar</span>
+        <span *ngIf="enviando">Entrando...</span>
+      </button>
+    </form>
+
+    <footer class="pwa-login-footer" *ngIf="!pwaService.isInstalled()">
+      <button type="button" class="btn-instalar-login" (click)="pwaService.promptInstall()" title="Instalar aplicativo Frota ASG e criar atalho">
+        <mat-icon>install_mobile</mat-icon>
+        <span>Instalar aplicativo / Criar atalho</span>
+      </button>
+    </footer>
+  </section>
+</main>

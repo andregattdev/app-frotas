@@ -1,0 +1,73 @@
+<main class="conta-page">
+  <section class="conta-card" aria-labelledby="titulo-conta">
+    <header class="conta-card-header">
+      <div class="conta-icon-badge">
+        <mat-icon>security</mat-icon>
+      </div>
+      <div>
+        <span class="eyebrow">Segurança de Acesso</span>
+        <h1 id="titulo-conta">Minha conta</h1>
+      </div>
+    </header>
+    <p class="descricao">Altere sua senha de acesso periodicamente para manter sua conta protegida.</p>
+
+    <div *ngIf="mensagemErro" class="mensagem erro" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ mensagemErro }}</span>
+    </div>
+    
+    <div *ngIf="mensagemSucesso" class="mensagem sucesso" role="status">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ mensagemSucesso }}</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="alterarSenha()">
+      <div class="form-group">
+        <label for="senha-atual">Senha atual</label>
+        <div class="campo-senha">
+          <mat-icon class="input-lead-icon">lock_open</mat-icon>
+          <input id="senha-atual" [type]="mostrarSenhaAtual ? 'text' : 'password'"
+            formControlName="senhaAtual" autocomplete="current-password" placeholder="Digite sua senha atual" required>
+          <button type="button" class="alternar-senha" (click)="mostrarSenhaAtual = !mostrarSenhaAtual"
+            [attr.aria-label]="mostrarSenhaAtual ? 'Ocultar senha atual' : 'Mostrar senha atual'">
+            <mat-icon>{{ mostrarSenhaAtual ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="nova-senha">Nova senha <span class="dica-senha">(mínimo de 12 caracteres)</span></label>
+        <div class="campo-senha">
+          <mat-icon class="input-lead-icon">lock</mat-icon>
+          <input id="nova-senha" [type]="mostrarNovaSenha ? 'text' : 'password'"
+            formControlName="novaSenha" autocomplete="new-password" minlength="12" maxlength="72" placeholder="Crie uma nova senha forte" required>
+          <button type="button" class="alternar-senha" (click)="mostrarNovaSenha = !mostrarNovaSenha"
+            [attr.aria-label]="mostrarNovaSenha ? 'Ocultar nova senha' : 'Mostrar nova senha'">
+            <mat-icon>{{ mostrarNovaSenha ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+        <small class="erro-campo" *ngIf="form.controls.novaSenha.touched && form.controls.novaSenha.hasError('minlength')">
+          A nova senha precisa ter pelo menos 12 caracteres.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmar-senha">Confirme a nova senha</label>
+        <div class="campo-senha">
+          <mat-icon class="input-lead-icon">lock</mat-icon>
+          <input id="confirmar-senha" [type]="mostrarConfirmacao ? 'text' : 'password'"
+            formControlName="confirmarSenha" autocomplete="new-password" placeholder="Repita a nova senha" required>
+          <button type="button" class="alternar-senha" (click)="mostrarConfirmacao = !mostrarConfirmacao"
+            [attr.aria-label]="mostrarConfirmacao ? 'Ocultar confirmação da senha' : 'Mostrar confirmação da senha'">
+            <mat-icon>{{ mostrarConfirmacao ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <button class="botao-salvar" type="submit" [disabled]="salvando">
+        <mat-icon *ngIf="!salvando">save</mat-icon>
+        <span>{{ salvando ? 'Salvando...' : 'Alterar senha' }}</span>
+      </button>
+    </form>
+  </section>
+</main>

@@ -1,0 +1,165 @@
+<main class="rota-page">
+  <a class="voltar" routerLink="/veiculos"><mat-icon>arrow_back</mat-icon> Voltar aos veículos</a>
+
+  <ng-container *ngIf="veiculoId; else veiculoAusente">
+    <header class="rota-header">
+      <div>
+        <span class="eyebrow">Planejamento de rota</span>
+        <h1>Paradas do veículo</h1>
+        <p *ngIf="veiculo">{{ veiculo.marca }} {{ veiculo.modelo }} · {{ veiculo.placa }} · Frota {{ veiculo.frota || '-' }}</p>
+      </div>
+      <button class="botao-atualizar" type="button" (click)="carregarRota()" [disabled]="carregando || ordemAlterada" title="Atualizar rota">
+        <mat-icon>refresh</mat-icon> Atualizar
+      </button>
+    </header>
+
+    <section class="painel-atribuicao">
+      <div>
+        <span class="eyebrow">Acesso do motorista</span>
+        <h2>Atribuir rota</h2>
+        <p *ngIf="motoristasAtribuidos.length">Atribuída atualmente a: <strong>{{ motoristasAtribuidos[0].nome }}</strong></p>
+        <p *ngIf="!motoristasAtribuidos.length">Esta rota ainda não está atribuída a um motorista.</p>
+      </div>
+      <div class="controle-atribuicao">
+        <select aria-label="Selecionar motorista" [(ngModel)]="motoristaSelecionado" [ngModelOptions]="{ standalone: true }">
+          <option [ngValue]="null">Selecione um motorista com acesso</option>
+          <option *ngFor="let motorista of motoristasComConta" [ngValue]="motorista.id">{{ motorista.nome }} · CNH {{ motorista.cnh }}</option>
+        </select>
+        <button type="button" (click)="atribuirMotorista()" [disabled]="!motoristaSelecionado || atribuindoMotorista">
+          {{ atribuindoMotorista ? 'Atribuindo...' : 'Atribuir motorista' }}
+        </button>
+      </div>
+    </section>
+
+    <p class="estado" *ngIf="carregando">Carregando dados da rota...</p>
+    <div class="erro-carregamento" *ngIf="erroCarregamento">
+      <span>Não foi possível carregar os dados deste veículo.</span>
+      <button type="button" (click)="carregarRota()">Tentar novamente</button>
+    </div>
+
+    <section class="rota-conteudo" *ngIf="!carregando && !erroCarregamento && veiculo">
+      <div class="painel-mapa">
+        <div class="painel-titulo">
+          <div><span class="eyebrow">Visualização</span><h2>Mapa da rota</h2></div>
+          <span class="contador">{{ pontos.length }} {{ pontos.length === 1 ? 'parada' : 'paradas' }}</span>
+        </div>
+        <p class="instrucao-mapa">Clique no mapa para preencher as coordenadas da parada selecionada.</p>
+        <div #mapElement class="mapa" role="application" aria-label="Mapa interativo para planejar as paradas"></div>
+        <div class="legenda">
+          <span><i class="marcador-legenda entrega"></i> Entrega</span>
+          <span><i class="marcador-legenda retirada"></i> Retirada</span>
+          <span><i class="linha-legenda"></i> Sequência da rota</span>
+        </div>
+      </div>
+
+      <aside class="painel-formulario">
+        <div class="painel-titulo">
+          <div><span class="eyebrow">{{ modoEdicao ? 'Editar' : 'Novo ponto' }}</span><h2>{{ modoEdicao ? 'Atualizar parada' : 'Adicionar parada' }}</h2></div>
+          <button *ngIf="modoEdicao" class="botao-limpar" type="button" (click)="iniciarNovaParada()">Cancelar edição</button>
+        </div>
+
+        <form [formGroup]="paradaForm" (ngSubmit)="salvarParada()">
+          <label for="parada-descricao">Descrição da parada (opcional)</label>
+          <input id="parada-descricao" formControlName="descricao" maxlength="255" placeholder="Ex.: Entrega no cliente">
+
+          <label for="parada-estabelecimento">Nome do estabelecimento (opcional)</label>
+          <input id="parada-estabelecimento" formControlName="nomeEstabelecimento" maxlength="255" placeholder="Ex.: Mercado Central">
+
+          <label for="parada-busca-local">Endereço ou nome para localizar</label>
+          <div class="busca-local">
+            <input id="parada-busca-local" [ngModel]="buscaLocal" (ngModelChange)="alterarBuscaLocal($event)" [ngModelOptions]="{ standalone: true }" placeholder="Digite o endereço e/ou estabelecimento">
+            <button type="button" (click)="buscarLocal()" [disabled]="buscandoLocal || !buscaLocal.trim()">
+              <mat-icon>search</mat-icon>{{ buscandoLocal ? 'Buscando...' : 'Buscar local' }}
+            </button>
+          </div>
+          <p class="ajuda-busca">Escolha um resultado para preencher o endereço e as coordenadas. A busca usa OpenStreetMap.</p>
+          <p class="erro-busca" *ngIf="erroBuscaLocal">{{ erroBuscaLocal }}</p>
+          <ul class="resultados-local" *ngIf="resultadosBusca.length">
+            <li *ngFor="let resultado of resultadosBusca">
+              <button type="button" (click)="selecionarResultado(resultado)">
+                <strong>{{ resultado.name || resultado.display_name }}</strong>
+                <span>{{ resultado.display_name }}</span>
+              </button>
+            </li>
+          </ul>
+
+          <label for="parada-endereco">Endereço selecionado</label>
+          <input id="parada-endereco" formControlName="endereco" maxlength="500" placeholder="Escolha um resultado ou informe o endereço">
+
+          <label for="parada-tipo">Tipo de parada</label>
+          <select id="parada-tipo" formControlName="tipo">
+            <option *ngFor="let tipo of tiposParada" [value]="tipo">{{ tipo === 'ENTREGA' ? 'Entrega' : 'Retirada' }}</option>
+          </select>
+
+          <div class="coordenadas">
+            <div>
+              <label for="parada-latitude">Latitude</label>
+              <input id="parada-latitude" type="number" step="any" formControlName="latitude" placeholder="Clique no mapa">
+            </div>
+            <div>
+              <label for="parada-longitude">Longitude</label>
+              <input id="parada-longitude" type="number" step="any" formControlName="longitude" placeholder="Clique no mapa">
+            </div>
+          </div>
+          <p class="status-coordenada" *ngIf="mensagemCoordenada" role="status" aria-live="polite">
+            {{ mensagemCoordenada }}
+          </p>
+
+          <button class="botao-principal" type="submit" [disabled]="salvando || identificandoCoordenada || ordemAlterada">
+            <mat-icon>{{ modoEdicao ? 'save' : 'add_location_alt' }}</mat-icon>
+            {{ salvando ? 'Salvando...' : (modoEdicao ? 'Salvar alterações' : 'Adicionar parada') }}
+          </button>
+        </form>
+      </aside>
+
+      <section class="painel-paradas">
+        <div class="painel-titulo">
+          <div><span class="eyebrow">Ordem de visita</span><h2>Sequência das paradas</h2></div>
+          <div class="acoes-sequencia">
+            <span class="contador">{{ pontos.length }} total</span>
+            <button *ngIf="ordemAlterada" class="botao-descartar-ordem" type="button" (click)="cancelarAlteracoesOrdem()" [disabled]="reordenando">Cancelar</button>
+            <button *ngIf="ordemAlterada" class="botao-salvar-ordem" type="button" (click)="salvarSequencia()" [disabled]="reordenando">
+              <mat-icon>{{ reordenando ? 'sync' : 'save' }}</mat-icon>
+              {{ reordenando ? 'Salvando...' : 'Salvar sequência' }}
+            </button>
+          </div>
+        </div>
+        <p class="aviso-ordem" *ngIf="ordemAlterada">A ordem ainda não foi salva. Salve ou cancele antes de atualizar ou alterar uma parada.</p>
+        <p class="vazio" *ngIf="pontos.length === 0">Ainda não há paradas. Use o mapa e o formulário para montar a rota.</p>
+        <ol class="lista-paradas" *ngIf="pontos.length > 0">
+          <li *ngFor="let ponto of pontos; let indice = index" [class.selecionada]="pontoEmEdicao === ponto.id">
+            <span class="numero-parada" [class.retirada]="ponto.tipo === 'RETIRADA'">{{ indice + 1 }}</span>
+            <div class="dados-parada">
+              <strong>{{ ponto.nomeEstabelecimento || ponto.descricao }}</strong>
+              <span *ngIf="ponto.nomeEstabelecimento">{{ ponto.descricao }}</span>
+              <span *ngIf="ponto.endereco">{{ ponto.endereco }}</span>
+              <span>{{ ponto.tipo === 'ENTREGA' ? 'Entrega' : 'Retirada' }} · {{ ponto.latitude | number:'1.4-6' }}, {{ ponto.longitude | number:'1.4-6' }}</span>
+              <ol class="historico-registros" *ngIf="registrosDaParada(ponto.id).length">
+                <li *ngFor="let registro of registrosDaParada(ponto.id)" [class.ocorrencia]="registro.tipo === 'OCORRENCIA'">
+                  <strong>{{ tituloRegistro(registro) }}</strong>
+                  <span>{{ registro.registradoEm | date:'dd/MM/yyyy HH:mm' }} · {{ registro.motoristaNome }}</span>
+                  <p *ngIf="registro.observacao">{{ registro.observacao }}</p>
+                </li>
+              </ol>
+            </div>
+            <div class="acoes-parada">
+              <button type="button" (click)="moverParada(indice, -1)" [disabled]="indice === 0 || reordenando" [attr.aria-label]="'Mover ' + ponto.descricao + ' para cima'" title="Mover para cima"><mat-icon>arrow_upward</mat-icon></button>
+              <button type="button" (click)="moverParada(indice, 1)" [disabled]="indice === pontos.length - 1 || reordenando" [attr.aria-label]="'Mover ' + ponto.descricao + ' para baixo'" title="Mover para baixo"><mat-icon>arrow_downward</mat-icon></button>
+              <button type="button" (click)="editarParada(ponto)" [disabled]="ordemAlterada" [attr.aria-label]="'Editar ' + ponto.descricao" title="Editar"><mat-icon>edit</mat-icon></button>
+              <button class="excluir" type="button" (click)="excluirParada(ponto)" [disabled]="ordemAlterada" [attr.aria-label]="'Remover ' + ponto.descricao" title="Remover"><mat-icon>delete</mat-icon></button>
+            </div>
+          </li>
+        </ol>
+      </section>
+    </section>
+  </ng-container>
+
+  <ng-template #veiculoAusente>
+    <section class="aviso-veiculo">
+      <mat-icon>directions_car</mat-icon>
+      <h1>Selecione um veículo</h1>
+      <p>Abra as rotas pela lista de veículos para planejar as paradas do veículo escolhido.</p>
+      <a routerLink="/veiculos">Ir para veículos</a>
+    </section>
+  </ng-template>
+</main>

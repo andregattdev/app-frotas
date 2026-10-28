@@ -1,0 +1,87 @@
+<main class="registros-page">
+  <a class="voltar" routerLink="/dashboard"><mat-icon>arrow_back</mat-icon> Voltar ao dashboard</a>
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Acompanhamento operacional</span>
+      <h1>Registros das paradas</h1>
+      <p>Entregas, retiradas e ocorrências informadas pelos motoristas.</p>
+    </div>
+    <button class="atualizar" type="button" (click)="carregarRegistros()" [disabled]="carregando" title="Atualizar registros">
+      <mat-icon>refresh</mat-icon><span>Atualizar</span>
+    </button>
+  </header>
+
+  <section class="painel-filtros" aria-label="Filtros do histórico">
+    <div class="filtros-detalhados">
+      <label>Data inicial<input type="date" [(ngModel)]="dataInicio" [max]="dataFim || null"></label>
+      <label>Data final<input type="date" [(ngModel)]="dataFim" [min]="dataInicio || null"></label>
+      <label>Motorista
+        <select [(ngModel)]="motoristaFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let motorista of motoristasDisponiveis" [value]="motorista.id">{{ motorista.nome }}</option>
+        </select>
+      </label>
+      <label>Veículo
+        <select [(ngModel)]="veiculoFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let veiculo of veiculosDisponiveis" [value]="veiculo.id">{{ veiculo.placa }}</option>
+        </select>
+      </label>
+    </div>
+    <div class="controles">
+      <label class="busca"><mat-icon>search</mat-icon><input type="search" [(ngModel)]="termoBusca" placeholder="Buscar por parada, placa, motorista ou relato" aria-label="Buscar registros"></label>
+      <div class="filtros-tipo" role="group" aria-label="Filtrar por tipo de registro">
+        <button type="button" [class.ativo]="filtro === 'TODOS'" (click)="filtro = 'TODOS'">Todos</button>
+        <button type="button" [class.ativo]="filtro === 'CONCLUIDA'" (click)="filtro = 'CONCLUIDA'">Concluídas</button>
+        <button type="button" [class.ativo]="filtro === 'OCORRENCIA'" (click)="filtro = 'OCORRENCIA'">Ocorrências</button>
+      </div>
+    </div>
+    <footer class="resumo-filtros">
+      <span>{{ registrosFiltrados.length }} de {{ registros.length }} registros</span>
+      <button class="exportar" type="button" (click)="exportarCsv()" [disabled]="registrosFiltrados.length === 0">
+        <mat-icon>download</mat-icon> Exportar CSV
+      </button>
+    </footer>
+  </section>
+
+  <p class="estado" *ngIf="carregando">Carregando registros...</p>
+  <section class="erro" *ngIf="erro" role="alert">
+    <p>Não foi possível carregar os registros.</p>
+    <button type="button" (click)="carregarRegistros()">Tentar novamente</button>
+  </section>
+  <p class="vazio" *ngIf="!carregando && !erro && registros.length === 0">Nenhum registro de parada foi informado.</p>
+  <p class="vazio" *ngIf="!carregando && !erro && registros.length > 0 && registrosFiltrados.length === 0">Nenhum registro corresponde à busca.</p>
+
+  <section class="lista-registros" *ngIf="!carregando && !erro && registrosFiltrados.length > 0" aria-label="Registros dos motoristas">
+    <article class="registro" *ngFor="let registro of registrosFiltrados">
+      <header class="registro-cabecalho">
+        <span class="selo" [class.ocorrencia]="registro.tipo === 'OCORRENCIA'">{{ tituloRegistro(registro) }}</span>
+        <time>{{ registro.registradoEm | date:'dd/MM/yyyy HH:mm' }}</time>
+      </header>
+      <h2>{{ tituloParada(registro) }}</h2>
+      <p class="descricao">{{ registro.paradaDescricao }}</p>
+      <p class="endereco" *ngIf="registro.endereco">{{ registro.endereco }}</p>
+      <dl class="dados-registro">
+        <div><dt>Veículo</dt><dd>{{ registro.veiculoPlaca }}</dd></div>
+        <div><dt>Motorista</dt><dd>{{ registro.motoristaNome }} <span>@{{ registro.usuarioMotorista }}</span></dd></div>
+        <div><dt>Operação</dt><dd>{{ registro.tipoParada === 'ENTREGA' ? 'Entrega' : 'Retirada' }}</dd></div>
+      </dl>
+      <p class="localizacao-gps" *ngIf="registro.latitudeRegistro != null && registro.longitudeRegistro != null">
+        <strong>GPS da comprovação:</strong>
+        {{ registro.latitudeRegistro | number:'1.6-6' }}, {{ registro.longitudeRegistro | number:'1.6-6' }}
+      </p>
+      <p class="observacao" *ngIf="registro.observacao"><strong>Relato</strong>{{ registro.observacao }}</p>
+      <section class="prova-foto" *ngIf="registro.possuiFoto">
+        <button type="button" (click)="alternarFoto(registro)" [disabled]="fotosCarregando.has(registro.id)">
+          {{ fotosCarregando.has(registro.id) ? 'Carregando foto...' : fotos[registro.id] ? 'Ocultar foto' : 'Ver foto da comprovação' }}
+        </button>
+        <p class="erro-foto" *ngIf="errosFoto.has(registro.id)" role="alert">Não foi possível carregar a foto. Atualize o histórico e tente novamente.</p>
+        <img *ngIf="fotos[registro.id] as fotoUrl" [src]="fotoUrl" alt="Foto de comprovação da parada">
+      </section>
+      <p class="sem-foto" *ngIf="!registro.possuiFoto">Registro histórico sem foto anexada.</p>
+      <a class="mapa" [href]="'https://www.openstreetmap.org/?mlat=' + (registro.latitudeRegistro ?? registro.latitude) + '&mlon=' + (registro.longitudeRegistro ?? registro.longitude) + '#map=16/' + (registro.latitudeRegistro ?? registro.latitude) + '/' + (registro.longitudeRegistro ?? registro.longitude)" target="_blank" rel="noopener noreferrer">
+        <mat-icon>location_on</mat-icon> Ver localização
+      </a>
+    </article>
+  </section>
+</main>

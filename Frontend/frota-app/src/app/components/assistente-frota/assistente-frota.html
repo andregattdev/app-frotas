@@ -1,0 +1,98 @@
+<main class="assistente-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Operação da frota</span>
+      <h1>Assistente de frota</h1>
+      <p>Consulte os veículos, acompanhe checklists e direcione manutenções.</p>
+    </div>
+    <button class="botao-atualizar" type="button" (click)="carregarDados()" [disabled]="carregando">
+      <mat-icon>refresh</mat-icon><span>Atualizar</span>
+    </button>
+  </header>
+
+  <section class="painel" *ngIf="isAdmin">
+    <div class="painel-titulo">
+      <div><span class="eyebrow">Acesso</span><h2>Criar conta de assistente</h2></div>
+      <mat-icon>person_add</mat-icon>
+    </div>
+    <p>Crie uma conta restrita à gestão de veículos, checklists, oficinas e encaminhamentos.</p>
+    <form class="form-conta" [formGroup]="contaForm" (ngSubmit)="criarConta()">
+      <label>Usuário<input formControlName="username" autocomplete="off" required></label>
+      <label>E-mail<input type="email" formControlName="email" autocomplete="email" required></label>
+      <label>Senha inicial (mínimo de 12 caracteres)<input type="password" formControlName="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
+      <button class="botao-primario" type="submit" [disabled]="criandoConta">{{ criandoConta ? 'Criando...' : 'Criar assistente' }}</button>
+    </form>
+  </section>
+
+  <p class="estado" *ngIf="carregando">Carregando veículos e oficinas...</p>
+  <div class="erro" *ngIf="erroCarregamento" role="alert">
+    <span>Alguns dados não puderam ser carregados.</span>
+    <button type="button" (click)="carregarDados()">Tentar novamente</button>
+  </div>
+
+  <section class="resumo" *ngIf="!carregando">
+    <a class="cartao-resumo" href="#veiculos"><mat-icon>directions_car</mat-icon><span><strong>{{ veiculos.length }}</strong> veículos</span></a>
+    <a class="cartao-resumo" routerLink="/oficinas"><mat-icon>build</mat-icon><span><strong>{{ oficinas.length }}</strong> oficinas</span></a>
+    <a class="cartao-resumo" href="#encaminhamentos"><mat-icon>notifications_active</mat-icon><span><strong>{{ encaminhamentos.length }}</strong> alertas ativos</span></a>
+  </section>
+
+  <section id="veiculos" class="painel" *ngIf="!carregando">
+    <div class="painel-titulo">
+      <div><span class="eyebrow">Frota</span><h2>Veículos</h2></div>
+      <mat-icon>directions_car</mat-icon>
+    </div>
+    <p class="vazio" *ngIf="veiculos.length === 0">Nenhum veículo cadastrado.</p>
+    <a class="veiculo-item" *ngFor="let veiculo of veiculos" [routerLink]="['/checklist']" [queryParams]="{ veiculo: veiculo.id }">
+      <span><strong>{{ veiculo.placa }}</strong><small>{{ veiculo.marca }} {{ veiculo.modelo }} · Frota {{ veiculo.frota || '-' }}</small></span>
+      <span class="link-checklist"><mat-icon>fact_check</mat-icon>Checklist</span>
+    </a>
+  </section>
+
+  <section class="painel" *ngIf="!carregando">
+    <div class="painel-titulo">
+      <div><span class="eyebrow">Manutenção</span><h2>Enviar veículo à oficina</h2></div>
+      <mat-icon>campaign</mat-icon>
+    </div>
+    <p>O motorista receberá o destino e as orientações em “Minhas rotas”. O alerta fica visível até ser encerrado.</p>
+    <p class="vazio" *ngIf="veiculos.length === 0">Cadastre um veículo antes de enviar um encaminhamento.</p>
+    <p class="vazio" *ngIf="oficinas.length === 0">Cadastre uma oficina para poder informar um destino.</p>
+    <form class="form-encaminhamento" [formGroup]="encaminhamentoForm" (ngSubmit)="enviarAlerta()" *ngIf="veiculos.length > 0 && oficinas.length > 0">
+      <label>Veículo
+        <select formControlName="veiculoId" required>
+          <option value="" disabled>Selecione o veículo</option>
+          <option *ngFor="let veiculo of veiculos" [value]="veiculo.id" [disabled]="encaminhamentos.some(item => item.veiculo.id === veiculo.id)">
+            {{ veiculo.placa }} · {{ veiculo.marca }} {{ veiculo.modelo }}{{ encaminhamentos.some(item => item.veiculo.id === veiculo.id) ? ' · alerta ativo' : '' }}
+          </option>
+        </select>
+      </label>
+      <label>Oficina de destino
+        <select formControlName="oficinaId" required>
+          <option value="" disabled>Selecione a oficina</option>
+          <option *ngFor="let oficina of oficinas" [value]="oficina.id">{{ oficina.nomeOficina }} · {{ oficina.endereco?.cidade }}/{{ oficina.endereco?.estado }}</option>
+        </select>
+      </label>
+      <label class="campo-orientacao">Orientações para o motorista (opcional)
+        <textarea formControlName="orientacao" rows="3" maxlength="1000" placeholder="Descreva o problema ou o serviço que deve ser realizado"></textarea>
+      </label>
+      <button class="botao-primario" type="submit" [disabled]="enviandoAlerta">{{ enviandoAlerta ? 'Enviando...' : 'Enviar alerta ao motorista' }}</button>
+    </form>
+    <a class="link-oficinas" routerLink="/oficinas"><mat-icon>edit_location_alt</mat-icon> Gerenciar oficinas e endereços</a>
+  </section>
+
+  <section id="encaminhamentos" class="painel" *ngIf="!carregando">
+    <div class="painel-titulo">
+      <div><span class="eyebrow">Acompanhamento</span><h2>Alertas ativos</h2></div>
+      <span class="contador">{{ encaminhamentos.length }}</span>
+    </div>
+    <p class="vazio" *ngIf="encaminhamentos.length === 0">Nenhum veículo foi encaminhado para manutenção.</p>
+    <article class="encaminhamento" *ngFor="let item of encaminhamentos">
+      <div class="detalhes-encaminhamento">
+        <strong>{{ item.veiculo.placa }} · {{ item.veiculo.marca }} {{ item.veiculo.modelo }}</strong>
+        <span>{{ item.oficina.nomeOficina }} — {{ item.oficina.endereco?.logradouro }}, {{ item.oficina.endereco?.numero }} · {{ item.oficina.endereco?.cidade }}/{{ item.oficina.endereco?.estado }}</span>
+        <span *ngIf="item.orientacao">Orientação: {{ item.orientacao }}</span>
+        <small>Enviado em {{ item.enviadoEm | date:'dd/MM/yyyy HH:mm' }}</small>
+      </div>
+      <button type="button" class="botao-secundario" (click)="concluir(item)">Encerrar alerta</button>
+    </article>
+  </section>
+</main>

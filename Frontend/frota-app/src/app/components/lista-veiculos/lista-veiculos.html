@@ -1,0 +1,287 @@
+<div class="lista-veiculos-page">
+  <div class="page-top-nav">
+    <a class="voltar-link" [routerLink]="isAssistente ? '/assistente-frota' : '/dashboard'">
+      <mat-icon>arrow_back</mat-icon>
+      <span>Voltar ao painel</span>
+    </a>
+  </div>
+
+  <header class="page-header">
+    <div class="header-titles">
+      <span class="eyebrow">Gestão de Ativos</span>
+      <h1>Veículos da frota</h1>
+      <p>Cadastre, monitore e gerencie os veículos, vistorias e condutores da frota.</p>
+    </div>
+
+    <button type="button" class="btn-cadastrar-veiculo" (click)="abrirModal()">
+      <mat-icon>add</mat-icon>
+      <span>Cadastrar veículo</span>
+    </button>
+  </header>
+
+  <section class="painel-veiculos">
+    <div class="painel-barra-acoes">
+      <div class="campo-busca">
+        <mat-icon class="icone-busca">search</mat-icon>
+        <input 
+          id="veiculo-busca" 
+          type="search" 
+          [value]="termoBusca" 
+          (input)="buscar($any($event.target).value)" 
+          placeholder="Buscar por placa, modelo, marca, tipo ou frota..." 
+          aria-label="Buscar veículos">
+        <button *ngIf="termoBusca" type="button" class="btn-limpar-busca" (click)="limparBusca()" aria-label="Limpar busca" title="Limpar busca">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="acoes-direita">
+        <span class="contador-badge" *ngIf="!carregando && veiculos.length > 0">
+          <strong>{{ totalElementos }}</strong> {{ totalElementos === 1 ? 'veículo' : 'veículos' }}
+        </span>
+        <button type="button" class="btn-icon-refresh" (click)="carregarVeiculos()" title="Atualizar lista">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="estado-carregando" *ngIf="carregando">
+      <mat-icon class="girando">sync</mat-icon>
+      <span>Carregando veículos da frota...</span>
+    </div>
+
+    <div class="empty-state" *ngIf="!carregando && veiculos.length === 0">
+      <div class="empty-state-icon">
+        <mat-icon>directions_car</mat-icon>
+      </div>
+      <h3>{{ termoBusca ? 'Nenhum veículo encontrado' : 'Nenhum veículo cadastrado' }}</h3>
+      <p>{{ termoBusca ? 'Tente buscar por outro termo ou limpe os filtros de busca.' : 'Comece cadastrando o primeiro veículo da sua frota.' }}</p>
+      <button *ngIf="termoBusca" type="button" class="btn-saas-secondary" (click)="limparBusca()">
+        Limpar busca
+      </button>
+      <button *ngIf="!termoBusca" type="button" class="btn-saas-primary" (click)="abrirModal()">
+        <mat-icon>add</mat-icon> Cadastrar primeiro veículo
+      </button>
+    </div>
+
+    <div class="tabela-container" *ngIf="!carregando && veiculos.length > 0">
+      <table class="tabela-moderna">
+        <thead>
+          <tr>
+            <th>Placa</th>
+            <th>Modelo & Marca</th>
+            <th>Tipo</th>
+            <th>Frota</th>
+            <th *ngIf="!isAssistente">Motorista atual</th>
+            <th class="coluna-acoes">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let veiculo of veiculosPaginados">
+            <td>
+              <span class="placa-badge">{{ veiculo.placa }}</span>
+            </td>
+            <td>
+              <div class="veiculo-modelo-marca">
+                <strong>{{ veiculo.modelo }}</strong>
+                <span>{{ veiculo.marca }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-neutral">{{ veiculo.tipo }}</span>
+            </td>
+            <td>
+              <span class="tag-frota" *ngIf="veiculo.frota">Frota {{ veiculo.frota }}</span>
+              <span class="texto-apagado" *ngIf="!veiculo.frota">—</span>
+            </td>
+            <td *ngIf="!isAssistente">
+              <div class="badge-motorista" *ngIf="motoristaAtual(veiculo) as motorista">
+                <span class="ponto-status online"></span>
+                <div class="motorista-info">
+                  <strong>{{ motorista.motoristaNome }}</strong>
+                  <small>{{ motorista.dataHoraInicio | date:'dd/MM/yyyy HH:mm' }}</small>
+                </div>
+              </div>
+              <span class="badge badge-neutral" *ngIf="!motoristaAtual(veiculo)">
+                Disponível
+              </span>
+            </td>
+            <td class="coluna-acoes">
+              <div class="grupo-botoes-acao">
+                <button type="button" class="btn-acao btn-acao-editar" (click)="editarVeiculo(veiculo)" title="Editar dados do veículo">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button *ngIf="!isAssistente" type="button" class="btn-acao btn-acao-motorista" (click)="abrirMotoristas(veiculo)" title="Vincular motorista">
+                  <mat-icon>person</mat-icon>
+                </button>
+                <a *ngIf="!isAssistente" class="btn-acao btn-acao-doc" [routerLink]="['/veiculos/documentacao']" [queryParams]="{ veiculo: veiculo.id }" title="Documentação">
+                  <mat-icon>description</mat-icon>
+                </a>
+                <a *ngIf="!isAssistente" class="btn-acao btn-acao-manutencao" [routerLink]="['/veiculos/manutencao']" [queryParams]="{ veiculo: veiculo.id }" title="Manutenção">
+                  <mat-icon>build</mat-icon>
+                </a>
+                <a *ngIf="!isAssistente" class="btn-acao btn-acao-rotas" [routerLink]="['/veiculos/rotas']" [queryParams]="{ veiculo: veiculo.id }" title="Rotas">
+                  <mat-icon>route</mat-icon>
+                </a>
+                <a class="btn-acao btn-acao-checklist" [routerLink]="['/checklist']" [queryParams]="{ veiculo: veiculo.id }" title="Checklist de inspeção">
+                  <mat-icon>fact_check</mat-icon>
+                </a>
+                <button type="button" class="btn-acao btn-acao-excluir" (click)="excluirVeiculo(veiculo)" title="Excluir veículo">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginação -->
+    <nav class="painel-paginacao" *ngIf="totalPaginas > 1" aria-label="Paginação dos veículos">
+      <div class="paginacao-info">
+        Página <strong>{{ paginaAtual }}</strong> de <strong>{{ totalPaginas }}</strong>
+      </div>
+      <div class="paginacao-botoes">
+        <button type="button" class="btn-pagina" (click)="mudarPagina(paginaAtual - 1)" [disabled]="paginaAtual === 1" aria-label="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button
+          type="button"
+          class="btn-pagina numero-pagina"
+          *ngFor="let pagina of [].constructor(totalPaginas); let indice = index"
+          [class.pagina-ativa]="paginaAtual === indice + 1"
+          (click)="mudarPagina(indice + 1)">
+          {{ indice + 1 }}
+        </button>
+        <button type="button" class="btn-pagina" (click)="mudarPagina(paginaAtual + 1)" [disabled]="paginaAtual === totalPaginas" aria-label="Próxima página">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </nav>
+  </section>
+
+  <!-- Modal de Cadastro / Edição do Veículo -->
+  <div class="modal-fundo" *ngIf="modalAberto" (click)="fecharModal()">
+    <section class="modal-dialog modal-veiculo-form" role="dialog" aria-modal="true" aria-labelledby="titulo-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div class="modal-titulo-bloco">
+          <div class="modal-icone-badge">
+            <mat-icon>directions_car</mat-icon>
+          </div>
+          <div>
+            <span class="eyebrow">{{ idEmEdicao ? 'Atualização' : 'Novo Veículo' }}</span>
+            <h2 id="titulo-modal">{{ idEmEdicao ? 'Atualizar veículo' : 'Cadastrar novo veículo' }}</h2>
+          </div>
+        </div>
+        <button type="button" class="btn-fechar-modal" (click)="fecharModal()" [disabled]="salvando" aria-label="Fechar modal">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <form [formGroup]="veiculoForm" (ngSubmit)="salvarVeiculo()">
+        <div class="form-grid-duas-colunas">
+          <div class="form-group">
+            <label for="veiculo-placa">Placa <span class="obrigatorio">*</span></label>
+            <input id="veiculo-placa" formControlName="placa" placeholder="Ex: ABC1D23" style="text-transform: uppercase;">
+          </div>
+          
+          <div class="form-group">
+            <label for="veiculo-modelo">Modelo <span class="obrigatorio">*</span></label>
+            <input id="veiculo-modelo" formControlName="modelo" placeholder="Ex: Strada Freedom">
+          </div>
+
+          <div class="form-group">
+            <label for="veiculo-marca">Marca <span class="obrigatorio">*</span></label>
+            <input id="veiculo-marca" formControlName="marca" placeholder="Ex: Fiat">
+          </div>
+
+          <div class="form-group">
+            <label for="veiculo-tipo">Tipo de veículo <span class="obrigatorio">*</span></label>
+            <select id="veiculo-tipo" formControlName="tipo">
+              <option value="">Selecione o tipo</option>
+              <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="veiculo-cor">Cor</label>
+            <input id="veiculo-cor" formControlName="cor" placeholder="Ex: Branco">
+          </div>
+
+          <div class="form-group">
+            <label for="veiculo-frota">Número da Frota</label>
+            <input id="veiculo-frota" formControlName="frota" placeholder="Ex: 01">
+          </div>
+
+          <div class="form-group coluna-inteira">
+            <label for="veiculo-renavan">Renavam</label>
+            <input id="veiculo-renavan" formControlName="renavan" placeholder="Número do Renavam">
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-saas-secondary" (click)="fecharModal()" [disabled]="salvando">
+            Cancelar
+          </button>
+          <button class="btn-saas-primary" type="submit" [disabled]="salvando">
+            <mat-icon *ngIf="!salvando">check</mat-icon>
+            <span>{{ salvando ? 'Salvando...' : 'Salvar veículo' }}</span>
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal de Vínculo de Motoristas -->
+  <div class="modal-fundo" *ngIf="modalMotoristasAberto" (click)="fecharMotoristas()">
+    <section class="modal-dialog modal-motoristas-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div class="modal-titulo-bloco">
+          <div class="modal-icone-badge">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div>
+            <span class="eyebrow">Atribuição de Condutores</span>
+            <h2>Motoristas de {{ veiculoSelecionado?.modelo }}</h2>
+            <p class="subtitulo-modal">Frota {{ veiculoSelecionado?.frota || '-' }} · Placa {{ veiculoSelecionado?.placa }}</p>
+          </div>
+        </div>
+        <button type="button" class="btn-fechar-modal" (click)="fecharMotoristas()" aria-label="Fechar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="modal-corpo">
+        <div class="estado-carregando" *ngIf="carregandoMotoristas">
+          <mat-icon class="girando">sync</mat-icon>
+          <span>Consultando motoristas disponíveis...</span>
+        </div>
+
+        <p class="estado-lista" *ngIf="!carregandoMotoristas && motoristas.length === 0">
+          Nenhum motorista cadastrado no sistema.
+        </p>
+
+        <div class="lista-motoristas-cards" *ngIf="!carregandoMotoristas">
+          <div class="card-motorista-vinculo" *ngFor="let motorista of motoristas" [class.esta-vinculado]="estaVinculado(motorista)">
+            <div class="motorista-avatar">
+              {{ motorista.nome.charAt(0).toUpperCase() }}
+            </div>
+            <div class="motorista-detalhes">
+              <strong>{{ motorista.nome }}</strong>
+              <span>CNH {{ motorista.cnh }} · Cat {{ motorista.categoria || '-' }}</span>
+            </div>
+            <button 
+              type="button" 
+              class="btn-toggle-vinculo" 
+              [class.btn-desvincular]="estaVinculado(motorista)" 
+              [disabled]="alterandoVinculo === motorista.id" 
+              (click)="alterarVinculo(motorista)">
+              <mat-icon>{{ estaVinculado(motorista) ? 'link_off' : 'link' }}</mat-icon>
+              <span>{{ alterandoVinculo === motorista.id ? 'Aguarde...' : (estaVinculado(motorista) ? 'Desvincular' : 'Vincular') }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

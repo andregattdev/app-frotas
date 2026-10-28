@@ -1,0 +1,236 @@
+<main class="cadastro-page">
+  <a class="voltar" [routerLink]="isAssistenteFrota ? '/assistente-frota' : '/dashboard'"><mat-icon>arrow_back</mat-icon> {{ isAssistenteFrota ? 'Voltar à gestão da frota' : 'Voltar ao dashboard' }}</a>
+  <header>
+    <span class="eyebrow">Operação e Infraestrutura</span>
+    <h1>Oficinas e Endereços</h1>
+    <p>{{ isAssistenteFrota ? 'Cadastre e mantenha os endereços das oficinas de manutenção.' : 'Gerencie as oficinas parceiras e os endereços cadastrados no sistema.' }}</p>
+  </header>
+
+  <nav class="abas" aria-label="Navegação entre Oficinas e Endereços" *ngIf="!isAssistenteFrota">
+    <button class="aba-btn" type="button" [class.ativo]="abaAtiva === 'oficinas'" (click)="trocarAba('oficinas')">
+      <mat-icon>build</mat-icon> Oficinas
+    </button>
+    <button class="aba-btn" type="button" [class.ativo]="abaAtiva === 'enderecos'" (click)="trocarAba('enderecos')">
+      <mat-icon>location_on</mat-icon> Endereços Gerais
+    </button>
+  </nav>
+
+  <!-- ==================== ABA OFICINAS ==================== -->
+  <ng-container *ngIf="abaAtiva === 'oficinas'">
+    <button class="botao-principal" type="button" (click)="abrirModalOficina()">
+      <mat-icon>add</mat-icon> Cadastrar oficina
+    </button>
+
+    <section class="lista-panel">
+      <div class="cabecalho">
+        <h2>Oficinas cadastradas</h2>
+        <button class="botao-icon" type="button" (click)="carregarOficinas()" title="Atualizar">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+
+      <div class="campo-busca">
+        <mat-icon>search</mat-icon>
+        <input id="oficina-busca" type="search" [value]="termoBuscaOficina" (input)="buscarOficina($any($event.target).value)" placeholder="Buscar oficina por nome, telefone, especialidade ou endereço" aria-label="Buscar oficinas">
+        <button *ngIf="termoBuscaOficina" type="button" (click)="limparBuscaOficina()" aria-label="Limpar busca" title="Limpar busca">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <p class="estado" *ngIf="carregandoOficinas">Carregando oficinas...</p>
+      <p class="estado" *ngIf="!carregandoOficinas && oficinas.length === 0">{{ termoBuscaOficina ? 'Nenhuma oficina encontrada.' : 'Nenhuma oficina cadastrada.' }}</p>
+
+      <div class="tabela-wrapper" *ngIf="oficinas.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome da Oficina</th>
+              <th>Telefone</th>
+              <th>Especialidade</th>
+              <th>Endereço</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let oficina of oficinasPaginadas">
+              <td><strong>{{ oficina.nomeOficina }}</strong></td>
+              <td>{{ oficina.telefone }}</td>
+              <td>{{ oficina.especialidade }}</td>
+              <td>
+                <span *ngIf="oficina.endereco">
+                  {{ oficina.endereco.logradouro }}, {{ oficina.endereco.numero }} - {{ oficina.endereco.bairro }}, {{ oficina.endereco.cidade }}/{{ oficina.endereco.estado }} ({{ oficina.endereco.cep }})
+                </span>
+                <span *ngIf="!oficina.endereco">-</span>
+              </td>
+              <td class="acoes">
+                <button class="botao-icon" type="button" (click)="editarOficina(oficina)" title="Editar">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="botao-icon excluir" type="button" (click)="excluirOficina(oficina)" title="Excluir">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="paginacao" *ngIf="totalPaginasOficina > 1">
+        <button class="botao-pagina" type="button" (click)="mudarPaginaOficina(paginaAtualOficina - 1)" [disabled]="paginaAtualOficina === 1">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span>Página {{ paginaAtualOficina }} de {{ totalPaginasOficina }}</span>
+        <button class="botao-pagina" type="button" (click)="mudarPaginaOficina(paginaAtualOficina + 1)" [disabled]="paginaAtualOficina === totalPaginasOficina">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </nav>
+    </section>
+
+    <!-- Modal Oficina -->
+    <div class="modal-fundo" *ngIf="modalOficinaAberto" (click)="fecharModalOficina()">
+      <section class="modal" (click)="$event.stopPropagation()">
+        <div class="cabecalho">
+          <h2>{{ idOficinaEmEdicao ? 'Atualizar oficina' : 'Cadastrar oficina' }}</h2>
+          <button class="botao-icon" type="button" (click)="fecharModalOficina()"><mat-icon>close</mat-icon></button>
+        </div>
+
+        <form [formGroup]="oficinaForm" (ngSubmit)="salvarOficina()">
+          <label>Nome da Oficina *
+            <input id="oficina-nome" formControlName="nomeOficina" placeholder="Ex: Auto Mecânica São José">
+          </label>
+          <label>Telefone *
+            <input id="oficina-telefone" formControlName="telefone" placeholder="(00) 00000-0000">
+          </label>
+          <label style="grid-column: 1 / -1;">Especialidade *
+            <input id="oficina-especialidade" formControlName="especialidade" placeholder="Ex: Mecânica geral, Elétrica, Pneus, Funilaria">
+          </label>
+
+          <h3 class="subtitulo-form">Endereço da Oficina</h3>
+
+          <label>CEP *
+            <input id="oficina-cep" formControlName="cep" maxlength="9" placeholder="00000-000" (blur)="buscarCepOficina()">
+            <small *ngIf="buscandoCepOficina">Consultando CEP...</small>
+          </label>
+          <label>Logradouro *
+            <input id="oficina-logradouro" formControlName="logradouro" placeholder="Rua, Avenida, etc.">
+          </label>
+          <label>Número *
+            <input id="oficina-numero" formControlName="numero" placeholder="Ex: 123">
+          </label>
+          <label>Complemento
+            <input id="oficina-complemento" formControlName="complemento" placeholder="Galpão, Sala, etc.">
+          </label>
+          <label>Bairro *
+            <input id="oficina-bairro" formControlName="bairro">
+          </label>
+          <label>Cidade *
+            <input id="oficina-cidade" formControlName="cidade">
+          </label>
+          <label>UF *
+            <input id="oficina-estado" formControlName="estado" maxlength="2" placeholder="PR">
+          </label>
+
+          <button class="botao-principal" type="submit" [disabled]="salvandoOficina || buscandoCepOficina">
+            {{ salvandoOficina ? 'Salvando...' : (idOficinaEmEdicao ? 'Atualizar oficina' : 'Salvar oficina') }}
+          </button>
+        </form>
+      </section>
+    </div>
+  </ng-container>
+
+  <!-- ==================== ABA ENDEREÇOS GERAIS ==================== -->
+  <ng-container *ngIf="!isAssistenteFrota && abaAtiva === 'enderecos'">
+    <button class="botao-principal" type="button" (click)="abrirModalEndereco()">
+      <mat-icon>add</mat-icon> Cadastrar endereço
+    </button>
+
+    <section class="lista-panel">
+      <div class="cabecalho">
+        <h2>Endereços cadastrados</h2>
+        <button class="botao-icon" type="button" (click)="carregarEnderecos()" title="Atualizar">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+
+      <div class="campo-busca">
+        <mat-icon>search</mat-icon>
+        <input id="endereco-busca" type="search" [value]="termoBuscaEndereco" (input)="buscarEndereco($any($event.target).value)" placeholder="Buscar por rua, bairro, cidade, UF ou CEP" aria-label="Buscar endereços">
+        <button *ngIf="termoBuscaEndereco" type="button" (click)="limparBuscaEndereco()" aria-label="Limpar busca" title="Limpar busca">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <p class="estado" *ngIf="carregandoEnderecos">Carregando endereços...</p>
+      <p class="estado" *ngIf="!carregandoEnderecos && enderecos.length === 0">{{ termoBuscaEndereco ? 'Nenhum endereço encontrado.' : 'Nenhum endereço cadastrado.' }}</p>
+
+      <div class="tabela-wrapper" *ngIf="enderecos.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Logradouro</th>
+              <th>Número</th>
+              <th>Bairro</th>
+              <th>Cidade</th>
+              <th>UF</th>
+              <th>CEP</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let endereco of enderecosPaginados">
+              <td>{{ endereco.logradouro }}</td>
+              <td>{{ endereco.numero }}</td>
+              <td>{{ endereco.bairro }}</td>
+              <td>{{ endereco.cidade }}</td>
+              <td>{{ endereco.estado }}</td>
+              <td>{{ endereco.cep }}</td>
+              <td class="acoes">
+                <button class="botao-icon" type="button" (click)="editarEndereco(endereco)" title="Editar">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="botao-icon excluir" type="button" (click)="excluirEndereco(endereco)" title="Excluir">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="paginacao" *ngIf="totalPaginasEndereco > 1">
+        <button class="botao-pagina" type="button" (click)="mudarPaginaEndereco(paginaAtualEndereco - 1)" [disabled]="paginaAtualEndereco === 1">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span>Página {{ paginaAtualEndereco }} de {{ totalPaginasEndereco }}</span>
+        <button class="botao-pagina" type="button" (click)="mudarPaginaEndereco(paginaAtualEndereco + 1)" [disabled]="paginaAtualEndereco === totalPaginasEndereco">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </nav>
+    </section>
+
+    <!-- Modal Endereço -->
+    <div class="modal-fundo" *ngIf="modalEnderecoAberto" (click)="fecharModalEndereco()">
+      <section class="modal" (click)="$event.stopPropagation()">
+        <div class="cabecalho">
+          <h2>{{ idEnderecoEmEdicao ? 'Atualizar endereço' : 'Cadastrar endereço' }}</h2>
+          <button class="botao-icon" type="button" (click)="fecharModalEndereco()"><mat-icon>close</mat-icon></button>
+        </div>
+        <form [formGroup]="enderecoForm" (ngSubmit)="salvarEndereco()">
+          <label>CEP
+            <input id="endereco-cep" formControlName="cep" maxlength="9" placeholder="00000-000" (blur)="buscarCepEndereco()">
+            <small *ngIf="buscandoCepEndereco">Consultando CEP...</small>
+          </label>
+          <label>Logradouro<input id="endereco-logradouro" formControlName="logradouro"></label>
+          <label>Número<input id="endereco-numero" formControlName="numero"></label>
+          <label>Complemento<input id="endereco-complemento" formControlName="complemento"></label>
+          <label>Bairro<input id="endereco-bairro" formControlName="bairro"></label>
+          <label>Cidade<input id="endereco-cidade" formControlName="cidade"></label>
+          <label>UF<input id="endereco-estado" formControlName="estado" maxlength="2"></label>
+          <button class="botao-principal" type="submit" [disabled]="salvandoEndereco || buscandoCepEndereco">
+            {{ salvandoEndereco ? 'Salvando...' : (idEnderecoEmEdicao ? 'Atualizar endereço' : 'Salvar endereço') }}
+          </button>
+        </form>
+      </section>
+    </div>
+  </ng-container>
+</main>

@@ -1,0 +1,247 @@
+.conta-page {
+  display: grid;
+  min-height: calc(100vh - 64px);
+  place-items: start center;
+  padding: 40px 20px 80px;
+  box-sizing: border-box;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.conta-card {
+  width: min(100%, 500px);
+  padding: 36px 32px;
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--shadow-md);
+  box-sizing: border-box;
+}
+
+.conta-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.conta-icon-badge {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  flex-shrink: 0;
+}
+
+.conta-icon-badge mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  color: var(--primary-600);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: var(--slate-900);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.descricao {
+  margin: 8px 0 24px;
+  color: var(--slate-500);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+form {
+  display: grid;
+  gap: 16px;
+}
+
+.form-group {
+  display: grid;
+  gap: 6px;
+}
+
+label {
+  color: var(--slate-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dica-senha {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--slate-400);
+}
+
+.campo-senha {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-lead-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--slate-400);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.campo-senha input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 46px 10px 42px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: 10px;
+  background: var(--slate-50);
+  color: var(--slate-900);
+  font: inherit;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.campo-senha input::placeholder {
+  color: var(--slate-400);
+  font-size: 13px;
+}
+
+.campo-senha input:focus {
+  border-color: var(--primary-500);
+  background: #ffffff;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+}
+
+.campo-senha:focus-within .input-lead-icon {
+  color: var(--primary-600);
+}
+
+.alternar-senha {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: var(--slate-400);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.alternar-senha:hover {
+  color: var(--slate-700);
+  background: var(--slate-200);
+}
+
+.alternar-senha mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.erro-campo {
+  color: var(--danger-600);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.mensagem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.mensagem mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.mensagem.erro {
+  color: var(--danger-700);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-100);
+}
+
+.mensagem.sucesso {
+  color: var(--success-700);
+  background: var(--success-50);
+  border: 1px solid var(--success-100);
+}
+
+.botao-salvar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.botao-salvar mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.botao-salvar:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+  transform: translateY(-1px);
+}
+
+.botao-salvar:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 600px) {
+  .conta-page {
+    padding: 20px 16px 80px;
+  }
+  .conta-card {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+}
